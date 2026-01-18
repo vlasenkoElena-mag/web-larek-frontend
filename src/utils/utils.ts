@@ -1,13 +1,31 @@
+import { assert, isNil } from './simple-utils';
+
 export function pascalToKebab(value: string): string {
-    return value.replace(/([a-z0–9])([A-Z])/g, "$1-$2").toLowerCase();
+    return value.replace(/([a-z0–9])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-export function isSelector(x: any): x is string {
-    return (typeof x === "string") && x.length > 1;
+export function getModalContentContainer(modalRoot: HTMLElement): HTMLElement {
+    const contentElements = modalRoot.getElementsByClassName('modal__content');
+    assert(contentElements.length === 1, 'more than one modal content container were found');
+    const [container] = contentElements;
+    assert(!isNil(container), 'modal content container not found');
+
+    return container as HTMLElement;
 }
 
-export function isEmpty(value: any): boolean {
+export function isSelector(x: unknown): x is string {
+    return (typeof x === 'string') && x.length > 1;
+}
+
+export function isEmpty(value: unknown): boolean {
     return value === null || value === undefined;
+}
+
+export function setChildren(container: HTMLElement, children: HTMLElement[]) {
+    container.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    children.forEach(child => fragment.appendChild(child));
+    container.appendChild(fragment);
 }
 
 export type SelectorCollection<T> = string | NodeListOf<Element> | T[];
@@ -44,29 +62,37 @@ export function ensureElement<T extends HTMLElement>(selectorElement: SelectorEl
     throw new Error('Unknown selector element');
 }
 
-export function cloneTemplate<T extends HTMLElement>(query: string | HTMLTemplateElement): T {
-    const template = ensureElement(query) as HTMLTemplateElement;
-    return template.content.firstElementChild.cloneNode(true) as T;
+export function getTemplateFirstChild<T extends HTMLElement = HTMLElement>(templateId: string): T {
+    const template = document.getElementById(templateId) as HTMLTemplateElement;
+    assert(template instanceof HTMLTemplateElement, `Element is not a template. templateId: ${templateId}`);
+
+    return (template.content.firstElementChild as T);
 }
 
-export function bem(block: string, element?: string, modifier?: string): { name: string, class: string } {
+export function cloneTemplate<T extends HTMLElement>(templateId: string): T {
+    const firstChild = getTemplateFirstChild(templateId);
+
+    return firstChild.cloneNode(true) as T;
+}
+
+export function bem(block: string, element?: string, modifier?: string): { name: string; class: string } {
     let name = block;
     if (element) name += `__${element}`;
     if (modifier) name += `_${modifier}`;
     return {
         name,
-        class: `.${name}`
+        class: `.${name}`,
     };
 }
 
 export function getObjectProperties(obj: object, filter?: (name: string, prop: PropertyDescriptor) => boolean): string[] {
     return Object.entries(
         Object.getOwnPropertyDescriptors(
-            Object.getPrototypeOf(obj)
-        )
+            Object.getPrototypeOf(obj),
+        ),
     )
         .filter(([name, prop]: [string, PropertyDescriptor]) => filter ? filter(name, prop) : (name !== 'constructor'))
-        .map(([name, prop]) => name);
+        .map(([name]) => name);
 }
 
 /**
@@ -81,6 +107,7 @@ export function setElementData<T extends Record<string, unknown> | object>(el: H
 /**
  * Получает типизированные данные из dataset атрибутов элемента
  */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export function getElementData<T extends Record<string, unknown>>(el: HTMLElement, scheme: Record<string, Function>): T {
     const data: Partial<T> = {};
     for (const key in el.dataset) {
@@ -94,8 +121,8 @@ export function getElementData<T extends Record<string, unknown>>(el: HTMLElemen
  */
 export function isPlainObject(obj: unknown): obj is object {
     const prototype = Object.getPrototypeOf(obj);
-    return  prototype === Object.getPrototypeOf({}) ||
-        prototype === null;
+    return prototype === Object.getPrototypeOf({})
+      || prototype === null;
 }
 
 export function isBoolean(v: unknown): v is boolean {
@@ -108,11 +135,11 @@ export function isBoolean(v: unknown): v is boolean {
  * в интернет можно найти более полные реализации
  */
 export function createElement<
-    T extends HTMLElement
-    >(
+    T extends HTMLElement,
+>(
     tagName: keyof HTMLElementTagNameMap,
     props?: Partial<Record<keyof T, string | boolean | object>>,
-    children?: HTMLElement | HTMLElement []
+    children?: HTMLElement | HTMLElement [],
 ): T {
     const element = document.createElement(tagName) as T;
     if (props) {
@@ -120,7 +147,8 @@ export function createElement<
             const value = props[key];
             if (isPlainObject(value) && key === 'dataset') {
                 setElementData(element, value);
-            } else {
+            }
+            else {
                 // @ts-expect-error fix indexing later
                 element[key] = isBoolean(value) ? value : String(value);
             }
