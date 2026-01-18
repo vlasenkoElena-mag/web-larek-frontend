@@ -9,6 +9,7 @@ type MakeEmitter = <MessageMap extends Record<string, unknown>>() => EventEmitte
 
 export const makeEventEmitter: MakeEmitter = () => new EventEmitter();
 
+// Базовый класс для реализации паттерна "Издатель-Подписчик"
 export class EventEmitter<MessageMap extends object> {
     #handlers = new Map<keyof MessageMap, Set<EventHandler<MessageMap>>>();
     #allEventsHandler = new Set<AnyEventHandler<MessageMap>>();
@@ -52,7 +53,7 @@ export class EventEmitter<MessageMap extends object> {
     }
 
     /**
-     * Сбрасывает все обработчики
+     * Cбрасывает все обработчики
      */
     reset() {
         this.#handlers = new Map();

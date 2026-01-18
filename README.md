@@ -37,9 +37,35 @@
 - `OrderParams`: параметры создания заказа (`OrderDetails` + `Contacts` + `total` и `items`).
 - `Order`: созданный заказ (включая `orderId`).
 - `OrderId`: уникальный идентификатор заказа (`string`).
-- `Observable<Events>`: минимальный интерфейс для подписки на события (`on(event, handler)`).
+- `Observable<Events>`: минимальный интерфейс для подписки на события (`on(event, handler)`). 
 - `Renderer<T>`: простой рендерер с методом `render(data: T)`.
 
+В проекте активно используется класс [EventEmitter](src/components/base/event-emitter.ts). Реализации `Observable` обычно либо наследуют от него, либо содержат экземпляа EventEmitter.
+
+```typescript
+type EventHandler<T extends object, K extends keyof T = keyof T>
+    = (payload: T[K]) => void;
+
+type AnyEventHandler<T extends object> = (event: keyof T, payload: T[keyof T]) => void;
+
+// Базовый класс для реализации паттерна "Издатель-Подписчик", MessageMap - типовая карта событий
+class EventEmitter<MessageMap extends object> {
+    /** Публикует событие */
+    emit<T extends keyof MessageMap>(eventName: T, payload: MessageMap[T]) { /* ... */ }
+
+    /** Добавляет обработчик события */
+    on<T extends keyof MessageMap>(eventName: T | T[], handler: EventHandler<MessageMap, T>) { /* ... */ }
+
+    /** Снимает обработчик события */
+    off<T extends keyof MessageMap>(eventName: T, handler: EventHandler<MessageMap, T>) { /* ... */ }
+
+    /** Добавляет обработчик любого события */
+    onAll(handler: AnyEventHandler<MessageMap>) { /* ... */ }
+
+    /** Cбрасывает все обработчики */
+    reset() { /* ... */ }
+}
+```
 Архитектура проекта основана на паттерне MVP (Model-View-Presenter). Экземпляры представлений
 отвечают за отображение данных пользователю и транслирование событий из UI в собственные события View. Презентер слушает события представлений и обновляет соответствующие модели или другие представления, слушает события моделей и обновляет соответствующие представления.
 
