@@ -17,8 +17,6 @@ type Deps = {
 export type EventMap = {
     /** Публикуется после успешной загрузки списка товаров. */
     ['PRODUCTS:LOADED']: { products: Product[] };
-    /** Публикуется при выборе товара пользователем. */
-    ['PRODUCT:SELECTED']: { product: Product };
     /** Публикуется при ошибке загрузки списка товаров. */
     ['ERROR:PRODUCTS:LOAD']: LoadProductsError;
 };
@@ -87,13 +85,13 @@ export class CatalogModel extends EventEmitter<EventMap> {
      * @param {ProductId} id - Идентификатор товара для выбора.
      * @throws {ProductNotFoundError} Выбрасывается если товар с таким id отсутствует.
      */
-    public selectProduct(id: ProductId): void {
+    public getProduct(id: ProductId): Product {
         const product = this._products.get(id);
 
         if (isNil(product)) {
             throw new ProductNotFoundError(id);
         }
 
-        this.emit('PRODUCT:SELECTED', { product });
+        return product
     }
 }

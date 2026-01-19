@@ -10,6 +10,4 @@ export type CartViewEvents = {
 };
 
 /** Тип представления корзины. */
-export type CartView = Observable<CartViewEvents> & Renderer<Product[]> & {
-    hide(): void;
-};
+export type CartView = Observable<CartViewEvents> & Renderer<Product[]>;

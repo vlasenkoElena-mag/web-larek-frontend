@@ -1,6 +1,7 @@
-import type { ProductId, Product, Order, OrderDetails, Contacts } from '../../types';
+import type { ProductId, Product, Order, OrderDetails, Contacts, OrderParams } from '../../types';
 import type { CreateOrderResult, OrderApi } from '../../types/api/order.api';
 import { isNil } from '../../utils/simple-utils';
+import { InvalidOrderParamsError } from '../api/errors/invalid-order-params-error';
 import type { CreateOrderError } from '../api/errors/order-creation-error';
 import { EventEmitter } from '../base/event-emitter';
 
@@ -9,7 +10,7 @@ export type EventMap = {
     /** Публикуется при изменении содержимого корзины. */
     ['CART:UPDATED']: { products: Product[] };
     /** Публикуется после успешного создания заказа. */
-    ['ORDER:CREATED']: { order: Order };
+    ['ORDER:CREATED']: { totalPrice: number };
     /** Публикуется при ошибке создания заказа. */
     ['ERROR:ORDER:CREATE']: CreateOrderError;
 };
@@ -85,9 +86,12 @@ export class OrderModel extends EventEmitter<EventMap> {
      * Публикует `'ORDER:CREATED'` при успехе или `'ERROR:ORDER:CREATE'` при ошибке.
      */
     public createOrder(): void {
+        const orderDto = this._getOrderDto();
+        this._validateOrderDto(orderDto);
+        
         this._orderApi.create({
             items: this._products.map(p => p.id),
-            total: this._products.reduce((sum, p) => sum + p.price, 0),
+            total: this._products.reduce((sum, p) => sum + (p.price ?? 0), 0),
             ...this._orderDetails,
             ...this._contacts,
         }).then(result => this._handelOrderCreationResult(result));
@@ -105,10 +109,29 @@ export class OrderModel extends EventEmitter<EventMap> {
         this.emit('CART:UPDATED', this._getCartUpdateEventPayload());
     }
 
+    /** Формирует DTO заказа на основе текущих данных модели. */
+    private _validateOrderDto(params: OrderParams): void {
+        const { email, phone, address, payment, items } = params;
+
+        if (!email || !phone || !address || !payment || items.length === 0) {
+            throw new InvalidOrderParamsError(params);
+        }
+    }
+
+    /** Формирует DTO заказа на основе текущих данных модели. */
+    private _getOrderDto(): OrderParams {
+        return {
+            items: this._products.map(p => p.id),
+            total: this._products.reduce((sum, p) => sum + (p.price ?? 0), 0),
+            ...this._orderDetails,
+            ...this._contacts,
+        };
+    }
+
     /** Обрабатывает результат создания заказа и публикует соответствующее событие. */
     private _handelOrderCreationResult({ error, order }: CreateOrderResult) {
         if (error === null) {
-            return this.emit('ORDER:CREATED', { order });
+            return this.emit('ORDER:CREATED', { totalPrice: order.total });
         }
         else {
             return this.emit('ERROR:ORDER:CREATE', error);

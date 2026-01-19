@@ -1,5 +1,5 @@
 import type { OrderDetails } from '..';
-import type { FromModalView } from './base/form-modal.view';
+import type { FormModalView } from './base/form-modal.view';
 import type { FORM_SUBMIT } from './base/form.view';
 
 /**
@@ -13,7 +13,7 @@ export type OrderDetailsViewEvents = {
 /**
  * Представление модального окна с формой редактирования деталей заказа (`OrderDetails`).
  */
-export type OrderDetailsView = Omit<FromModalView<OrderDetails>, 'show' | 'modalRoot' | 'form'> & {
-    show(orderDetails: OrderDetails): void;
+export type OrderDetailsView = Omit<FormModalView<OrderDetails>, 'show' | 'modalRoot' | 'form'> & {
+    render(orderDetails: OrderDetails): void;
 };
 

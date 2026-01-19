@@ -2,6 +2,7 @@ import type { ProductId } from '../../types';
 import { type CartView } from '../../types/views/cart.view';
 import type { CatalogView } from '../../types/views/catalog.view';
 import type { ContactsView } from '../../types/views/contacts.view';
+import type { OrderCreationResultView } from '../../types/views/order-creation-result.view';
 import type { OrderDetailsView } from '../../types/views/order-details.view';
 import { type ProductView } from '../../types/views/product.view';
 import type { CatalogModel } from '../models/catalog.model';
@@ -26,6 +27,8 @@ export type Deps = {
     contactsModalView: ContactsView;
     /** представление корзины товаров */
     cartView: CartView;
+    /** представление результата создания заказа. */
+    orderCreationResultView: OrderCreationResultView;
 };
 
 /**
@@ -41,6 +44,7 @@ export class CatalogPresenter {
     private _orderDetailView: OrderDetailsView;
     private _contactsView: ContactsView;
     private _cartView: CartView;
+    private _orderCreationResultView: OrderCreationResultView;
 
     private _cartProductIds = new Set<ProductId>();
 
@@ -57,6 +61,7 @@ export class CatalogPresenter {
             orderDetailsView,
             contactsModalView,
             cartView,
+            orderCreationResultView,
         } = deps;
 
         this._catalogView = catalogView;
@@ -66,6 +71,7 @@ export class CatalogPresenter {
         this._cartView = cartView;
         this._catalogModel = catalogModel;
         this._orderModel = orderModel;
+        this._orderCreationResultView = orderCreationResultView;
     }
 
     /**
@@ -79,15 +85,15 @@ export class CatalogPresenter {
 
         this._catalogView.on(
             'PRODUCT:SELECTED',
-            ({ productId }) => this._catalogModel.selectProduct(productId),
+            ({ productId }) => { 
+                const product = this._catalogModel.getProduct(productId);
+                
+                this._productView.render({
+                    product,
+                    disableButton: this._cartProductIds.has(product.id),
+                });
+            },
         );
-
-        this._catalogModel.on('PRODUCT:SELECTED', ({ product }) => {
-            this._productView.render({
-                product,
-                disableButton: this._cartProductIds.has(product.id),
-            });
-        });
 
         this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
             this._orderModel.addProduct(product);
@@ -102,12 +108,12 @@ export class CatalogPresenter {
         });
 
         this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
-            this._orderDetailView.show(this._orderModel.orderDetails);
+            this._orderDetailView.render(this._orderModel.orderDetails);
         });
 
         this._orderDetailView.on('FORM-SUBMIT', orderDetails => {
             this._orderModel.setOrderDetails(orderDetails);
-            this._contactsView.show(this._orderModel.contacts);
+            this._contactsView.render(this._orderModel.contacts);
         });
 
         this._contactsView.on('FORM-SUBMIT', contacts => {
@@ -115,9 +121,9 @@ export class CatalogPresenter {
             this._orderModel.createOrder();
         });
 
-        this._orderModel.on('ORDER:CREATED', order => {
-            console.log('order:', order); // TODO remove after first stage would be done
+        this._orderModel.on('ORDER:CREATED', ({ totalPrice}) => {
             this._contactsView.hide();
+            this._orderCreationResultView.render({ totalPrice });
         });
     }
 }

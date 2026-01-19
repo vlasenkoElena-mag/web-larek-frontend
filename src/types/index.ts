@@ -22,7 +22,7 @@ export type Product = {
     /** Категория товара. */
     category: string;
     /** Цена товара в целых единицах (тип `Price`). */
-    price: number;
+    price: number | null;
 };
 
 /** Детали заказа. */
