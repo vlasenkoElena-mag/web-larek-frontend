@@ -1,130 +1,40 @@
-import { makeProductApi } from './components/api/product.api';
-import { makeCartController } from './components/controllers/order.controller';
-import { makeCatalogController } from './components/controllers/catalog.controller';
-import { makeChannels } from './components/events/channels';
-import { makeCart } from './components/models/order.model';
-import { makeCatalog } from './components/models/catalog.model';
-import { makeCatalogPresenter } from './components/presenters/catalog.presenter';
-import { makeCartView } from './components/views/cart/cart.view';
-import { makeCartProductViewFactory } from './components/views/cart/cart-product-element.factory';
-import { makeCatalogCardFactory } from './components/views/catalog/catalog-card.factory';
-import { makeCatalogView } from './components/views/catalog/catalog.view';
-import { makeProductModalView } from './components/views/product/product-modal.view';
+import { OrderApi } from './components/api/order.api.js';
+import { ProductApi } from './components/api/product.api.js';
+import { CartModel } from './components/models/cart.model.js';
+import { CatalogModel } from './components/models/catalog.model.js';
+import { CustomerModel } from './components/models/customer.model.js';
+import { CatalogPresenter } from './components/presenters/catalog.presenter.js';
+import { CartBrowserView } from './components/views/cart.view.js';
+import { CatalogBrowserView } from './components/views/catalog.view.js';
+import { ContactsBrowserView } from './components/views/contacts.view.js';
+import { OrderCreationResultBrowserView } from './components/views/order-creation-result.view.js';
+import { OrderDetailsBrowserView } from './components/views/order-details.view.js';
+import { ProductModalBrowserView } from './components/views/product/product-modal.view.js';
+import { BASE_API_URL } from './config/api-config.js';
 
-import './scss/styles.scss';
-import { makeFakeOrderApi } from './test/test-utils/api-fakes';
-import { cloneTemplate, ensureElement, getTemplateFirstChild } from './utils/utils';
-import { makeFromModalView } from './components/views/common/form-modal.view';
-import { makeModalViewFactory } from './components/views/common/modal-view.factory';
-import type { ProductView } from './types/views/product.view';
-import { makeListView } from './components/views/common/list.view';
-import { makeProductView } from './components/views/product/product.view';
-import { makeCartButtonView } from './components/views/cart/cart-button.view';
-import { makeButtonView } from './components/views/common/button.view';
+const productApi = new ProductApi(BASE_API_URL);
 
-const channels = makeChannels();
+const run = async () => {
+    const { error, products} = await productApi.getAll();
 
-const catalog = makeCatalog();
-const cart = makeCart();
+    if (error) {
+        throw error;
+    }
 
-const catalogController = makeCatalogController({
-    catalog,
-    productApi: makeProductApi(),
-    ...channels,
-});
-
-catalogController.init();
-
-const cartController = makeCartController({
-    cart,
-    orderApi: makeFakeOrderApi(),
-    ...channels,
-});
-
-cartController.init();
-
-const productCardFactory = makeCatalogCardFactory({
-    prototypeElement: (ensureElement('#card-catalog') as HTMLTemplateElement).content.firstElementChild as HTMLElement,
-});
-
-const catalogView = makeCatalogView({
-    productCardFactory,
-    productsView: makeListView({
-        container: ensureElement('.gallery'),
-    }),
-});
-
-const modalViewFactory = makeModalViewFactory({
-    modalRootPrototype: getTemplateFirstChild('modal'),
-});
-
-const initProductModalView = (pageElement: HTMLElement): ProductView => {
-    const modalView = modalViewFactory.makeModalView();
-    const productElement = cloneTemplate('card-preview');
-    modalView.setContent(productElement);
-
-    const productModalView = makeProductModalView({
-        modalView: modalView,
-        productView: makeProductView({ productElement }),
+    const presenter = new CatalogPresenter({
+        catalogModel: new CatalogModel(products),
+        cartModel: new CartModel(),
+        customerModel: new CustomerModel(),
+        cartView: new CartBrowserView(), // не реализовано
+        catalogView: new CatalogBrowserView(), // не реализовано
+        orderDetailsView: new OrderDetailsBrowserView(), // не реализовано
+        productModalView: new ProductModalBrowserView(),
+        contactsModalView: new ContactsBrowserView(), // не реализовано
+        orderCreationResultView: new OrderCreationResultBrowserView(), // не реализовано
+        orderApi: new OrderApi(BASE_API_URL)
     });
 
-    modalView.render(pageElement);
-
-    return productModalView;
+    presenter.init();
 };
 
-const pageElement = ensureElement<HTMLElement>('.page');
-const productModalView = initProductModalView(pageElement);
-
-const initCartView = (pageElement: HTMLElement) => {
-    const cartElement = cloneTemplate('basket');
-    console.log('cartElement:', cartElement);
-    const cartModal = modalViewFactory.makeModalView();
-    cartModal.setContent(cartElement);
-    const productsContainer = ensureElement('.basket__list', cartElement);
-    cartModal.setContentContainer(productsContainer);
-
-    const cartView = makeCartView({
-        cartModal,
-        cartButton: makeCartButtonView({
-            buttonElement: ensureElement('.header__basket') as HTMLButtonElement,
-            totalPriceElement: ensureElement('.header__basket-counter'),
-        }),
-        cartProductViewFactory: makeCartProductViewFactory({
-            prototypeElement: getTemplateFirstChild('card-basket'),
-        }),
-        cartPriceElement: ensureElement('.basket__price', cartElement),
-        createOrderButton: makeButtonView({
-            buttonElement: ensureElement('.order-create', cartElement) as HTMLButtonElement,
-        }),
-    });
-
-    cartModal.render(pageElement);
-
-    return cartView;
-};
-
-const cartView = initCartView(pageElement);
-
-const orderDetailModalView = makeFromModalView({
-    modalRoot: ensureElement('#order-details-modal'),
-    form: Reflect.get(document.forms, 'order-details'),
-});
-
-const contactsModalView = makeFromModalView({
-    modalRoot: ensureElement('#contacts-modal'),
-    form: Reflect.get(document.forms, 'contacts'),
-});
-
-const catalogPresenter = makeCatalogPresenter({
-    catalog,
-    cart,
-    catalogView,
-    productModalView,
-    orderDetailsView,
-    contactsModalView,
-    cartView,
-    ...channels,
-});
-
-catalogPresenter.init();
+run();

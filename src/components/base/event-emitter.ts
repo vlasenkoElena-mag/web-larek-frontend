@@ -1,23 +1,22 @@
 import { asArray } from '../../utils/simple-utils';
 
-type EventHandler<T extends object, K extends keyof T = keyof T>
+export type EventHandler<T extends object, K extends keyof T = keyof T>
     = (payload: T[K]) => void;
 
 type AnyEventHandler<T extends object> = (event: keyof T, payload: T[keyof T]) => void;
-
 type MakeEmitter = <MessageMap extends Record<string, unknown>>() => EventEmitter<MessageMap>;
 
 export const makeEventEmitter: MakeEmitter = () => new EventEmitter();
 
 // Базовый класс для реализации паттерна "Издатель-Подписчик"
 export class EventEmitter<MessageMap extends object> {
-    #handlers = new Map<keyof MessageMap, Set<EventHandler<MessageMap>>>();
-    #allEventsHandler = new Set<AnyEventHandler<MessageMap>>();
+    private _handlers = new Map<keyof MessageMap, Set<EventHandler<MessageMap>>>();
+    private _allEventsHandler = new Set<AnyEventHandler<MessageMap>>();
 
     /** Публикует событие */
     emit<T extends keyof MessageMap>(eventName: T, payload: MessageMap[T]) {
-        this.#getHandlers(eventName).forEach(handle => handle(payload));
-        this.#allEventsHandler.forEach(handle => handle(eventName, payload));
+        this._getHandlers(eventName).forEach(handle => handle(payload));
+        this._allEventsHandler.forEach(handle => handle(eventName, payload));
     }
 
     /**
@@ -25,11 +24,11 @@ export class EventEmitter<MessageMap extends object> {
      */
     on<T extends keyof MessageMap>(eventName: T | T[], handler: EventHandler<MessageMap, T>) {
         asArray(eventName).forEach(evt => {
-            if (!this.#handlers.has(evt)) {
-                this.#handlers.set(evt, new Set());
+            if (!this._handlers.has(evt)) {
+                this._handlers.set(evt, new Set());
             }
 
-            this.#handlers.get(evt)?.add(handler as EventHandler<MessageMap, keyof MessageMap>);
+            this._handlers.get(evt)?.add(handler as EventHandler<MessageMap, keyof MessageMap>);
         });
     }
 
@@ -37,11 +36,11 @@ export class EventEmitter<MessageMap extends object> {
      * Снимает обработчик события
      */
     off<T extends keyof MessageMap>(eventName: T, handler: EventHandler<MessageMap, T>) {
-        const handlers = this.#handlers.get(eventName);
+        const handlers = this._handlers.get(eventName);
         handlers?.delete(handler as EventHandler<MessageMap, keyof MessageMap>);
 
-        if (this.#handlers.get(eventName)?.size === 0) {
-            this.#handlers.delete(eventName);
+        if (this._handlers.get(eventName)?.size === 0) {
+            this._handlers.delete(eventName);
         }
     }
 
@@ -49,18 +48,18 @@ export class EventEmitter<MessageMap extends object> {
      *  Добавляет обработчик любого события
      */
     onAll(handler: AnyEventHandler<MessageMap>) {
-        this.#allEventsHandler.add(handler);
+        this._allEventsHandler.add(handler);
     }
 
     /**
      * Cбрасывает все обработчики
      */
     reset() {
-        this.#handlers = new Map();
-        this.#allEventsHandler = new Set();
+        this._handlers = new Map();
+        this._allEventsHandler = new Set();
     }
 
-    #getHandlers(eventName: keyof MessageMap): Set<EventHandler<MessageMap>> {
-        return this.#handlers.get(eventName) ?? new Set();
+    _getHandlers(eventName: keyof MessageMap): Set<EventHandler<MessageMap>> {
+        return this._handlers.get(eventName) ?? new Set();
     }
 }

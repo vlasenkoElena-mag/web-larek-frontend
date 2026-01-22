@@ -14,8 +14,14 @@ export type ProductInfo = {
 };
 
 /**
+ * Тип представления карточки товара.
+ * Комбинация `Observable<ProductModalViewEvents>` и рендерера информации о товаре.
+ */
+export type ProductCardView = Observable<ProductModalViewEvents>
+  & Renderer<Product> & { setButtonDisabledState(disabled: boolean): void; };
+
+  /**
  * Тип представления модального окна товара.
  * Комбинация `Observable<ProductModalViewEvents>` и рендерера информации о товаре.
  */
-export type ProductView = Observable<ProductModalViewEvents>
-  & Renderer<{ product: Product; disableButton: boolean }>;
+export type ProductModalView = ProductCardView;

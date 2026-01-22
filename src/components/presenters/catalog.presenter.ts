@@ -1,26 +1,32 @@
 import type { ProductId } from '../../types';
+import { CreateOrderResult, OrderApi } from '../../types/api/order.api';
 import { type CartView } from '../../types/views/cart.view';
 import type { CatalogView } from '../../types/views/catalog.view';
 import type { ContactsView } from '../../types/views/contacts.view';
 import type { OrderCreationResultView } from '../../types/views/order-creation-result.view';
 import type { OrderDetailsView } from '../../types/views/order-details.view';
-import { type ProductView } from '../../types/views/product.view';
+import { type ProductCardView } from '../../types/views/product.view';
+import { CartModel } from '../models/cart.model';
 import type { CatalogModel } from '../models/catalog.model';
-import type { OrderModel } from '../models/order.model';
+import { CustomerModel } from '../models/customer.model';
 
 /**
  * Зависимости `CatalogPresenter`.
  * Модели и представления, с которыми работает презентер.
  */
 export type Deps = {
+    /** модель корзины */
+    cartModel: CartModel;
     /** модель каталога */
     catalogModel: CatalogModel;
-    /** модель заказа */
-    orderModel: OrderModel;
+    /** модель покупателя */
+    customerModel: CustomerModel;
+    /** API заказа */
+    orderApi: OrderApi;
     /** представление каталога */
     catalogView: CatalogView;
     /** представление модального окна показа товара */
-    productModalView: ProductView;
+    productModalView: ProductCardView;
     /** представление модальной формы для ввода деталей заказа */
     orderDetailsView: OrderDetailsView;
     /** представление модальной формы для ввода контактных данных */
@@ -31,22 +37,18 @@ export type Deps = {
     orderCreationResultView: OrderCreationResultView;
 };
 
-/**
- * Презентер каталога.
- * Отвечает за связку `CatalogModel`, `OrderModel` и соответствующих представлений,
- * маршрутизирует события между ними, и обновляет модели и представления.
- */
+/** Презентер каталога. */
 export class CatalogPresenter {
+    private _cartModel: CartModel;
     private _catalogModel: CatalogModel;
-    private _orderModel: OrderModel;
+    private _customerModel: CustomerModel;
     private _catalogView: CatalogView;
-    private _productView: ProductView;
+    private _productView: ProductCardView;
     private _orderDetailView: OrderDetailsView;
     private _contactsView: ContactsView;
     private _cartView: CartView;
     private _orderCreationResultView: OrderCreationResultView;
-
-    private _cartProductIds = new Set<ProductId>();
+    private _orderApi: OrderApi;
 
     /**
      * Создаёт экземпляр `CatalogPresenter`.
@@ -54,14 +56,16 @@ export class CatalogPresenter {
      */
     constructor(deps: Deps) {
         const {
+            cartModel,
             catalogModel,
-            orderModel,
+            customerModel,
             catalogView,
             productModalView,
             orderDetailsView,
             contactsModalView,
             cartView,
             orderCreationResultView,
+            orderApi,
         } = deps;
 
         this._catalogView = catalogView;
@@ -69,9 +73,11 @@ export class CatalogPresenter {
         this._orderDetailView = orderDetailsView;
         this._contactsView = contactsModalView;
         this._cartView = cartView;
+        this._cartModel = cartModel;
+        this._customerModel = customerModel;
         this._catalogModel = catalogModel;
-        this._orderModel = orderModel;
         this._orderCreationResultView = orderCreationResultView;
+        this._orderApi = orderApi;
     }
 
     /**
@@ -79,53 +85,53 @@ export class CatalogPresenter {
      * связывает их между собой и запускает отображение каталога при загрузке.
      */
     init() {
-        this._catalogModel.on('PRODUCTS:LOADED', ({ products }) => {
-            this._catalogView.render(products);
-        });
+        this._catalogView.render(this._cartModel.products);
 
         this._catalogView.on(
             'PRODUCT:SELECTED',
             ({ productId }) => { 
                 const product = this._catalogModel.getProduct(productId);
-                
-                this._productView.render({
-                    product,
-                    disableButton: this._cartProductIds.has(product.id),
-                });
+                this._productView.render(product);
+                this._productView.setButtonDisabledState(this._cartModel.has(product.id));
             },
         );
 
         this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
-            this._orderModel.addProduct(product);
-        });
-
-        this._orderModel.on('CART:UPDATED', ({ products }) => {
-            this._cartView.render(products);
+            this._cartModel.addProduct(product);
+            this._cartView.render(this._cartModel.products);
+            this._productView.setButtonDisabledState(true);
         });
 
         this._cartView.on('BUTTON-CLICK:REMOVE-PRODUCT', ({ productId }) => {
-            this._orderModel.removeProduct(productId);
+            this._cartModel.removeProduct(productId);
+            this._cartView.render(this._cartModel.products);
         });
 
         this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
-            this._orderDetailView.render(this._orderModel.orderDetails);
+            this._orderDetailView.render(this._customerModel.orderDetails);
         });
 
         this._orderDetailView.on('FORM-SUBMIT', orderDetails => {
-            this._orderModel.setOrderDetails(orderDetails);
-            this._contactsView.render(this._orderModel.contacts);
+            this._customerModel.setOrderDetails(orderDetails);
+            this._contactsView.render(this._customerModel.contacts);
         });
 
-        this._contactsView.on('FORM-SUBMIT', contacts => {
-            this._orderModel.setContacts(contacts);
-            this._orderModel.createOrder();
-        });
+        this._contactsView.on('FORM-SUBMIT', async contacts => {
+            this._customerModel.setContacts(contacts);
+            const { error, order} = await this._createOrder();
 
-        this._orderModel.on('ORDER:CREATED', ({ totalPrice}) => {
-            this._contactsView.hide();
-            this._orderCreationResultView.render({ totalPrice });
+            if (error) {
+                throw error; // TODO add error view, нет шаблона для отображения ошибки
+            }
+
+            this._orderCreationResultView.render({ totalPrice: order.total });
+        });
+    }
+
+    private _createOrder(): Promise<CreateOrderResult> {
+        return this._orderApi.create({
+            ...this._cartModel.getValidItems(),
+            ...this._customerModel.getValidCustomerInfo(),
         });
     }
 }
-
-export const makeCatalogPresenter = (deps: Deps) => new CatalogPresenter(deps);

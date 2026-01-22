@@ -5,7 +5,7 @@ export type ProductId = string;
 export type Price = number;
 
 /** Тип способа оплаты (строка, например "card" или "cash"). */
-export type Payment = string;
+export type Payment =  'cash' | 'card' | '';;
 
 /**
  * Описание товара в каталоге.
@@ -25,6 +25,12 @@ export type Product = {
     price: number | null;
 };
 
+export type OrderCreationResponse = {
+    id: string; 
+    total: number;
+}
+
+
 /** Детали заказа. */
 export type OrderDetails = {
     /** Способ оплаты. */
@@ -41,16 +47,18 @@ export type Contacts = {
     phone: string;
 };
 
-/**
- * Параметры заказа, используемые при создании заказа.
- * Объединяет детали заказа, контакты и служебные поля `total` и `items`.
- */
-export type OrderParams = OrderDetails & Contacts & {
+export type OrderItems = {
     /** Общая сумма заказа. */
     total: number;
     /** Список идентификаторов товаров в заказе. */
     items: ProductId[];
 };
+
+/**
+ * Параметры заказа, используемые при создании заказа.
+ * Объединяет детали заказа, контакты и служебные поля `total` и `items`.
+ */
+export type OrderParams = OrderDetails & Contacts & OrderItems;
 
 /** Представление созданного заказа (включая `orderId`). */
 export type Order = OrderParams & { orderId: OrderId };
@@ -58,8 +66,10 @@ export type Order = OrderParams & { orderId: OrderId };
 /** Уникальный идентификатор заказа. */
 export type OrderId = string;
 
+export type CustomerInfo = Contacts & OrderDetails;;
+
 /**
- * Базовый интерфейс наблюдаемых ресурсов (например различные экземпляры View и Model)
+ * Базовый интерфейс наблюдаемых ресурсов (например различные экземпляры)
  * для типизации публикуемых событий.
  */
 export type Observable<Events extends Record<string, unknown>> = {

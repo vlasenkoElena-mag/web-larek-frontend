@@ -1,63 +1,12 @@
 import type { Product, ProductId } from '../../types';
-import type { ProductApi } from '../../types/api/product.api';
 import { isNil } from '../../utils/simple-utils';
-import type { LoadProductsError } from '../api/errors/product-list-loading-error';
 import { ProductNotFoundError } from '../api/errors/product-not-found-error';
-import { EventEmitter } from '../base/event-emitter';
 
-/** Зависимости модели каталога товаров. */
-type Deps = {
-    /** api для получения данных о товарах */
-    productApi: ProductApi;
-};
-
-/**
- * Карта событий `CatalogModel`.
- */
-export type EventMap = {
-    /** Публикуется после успешной загрузки списка товаров. */
-    ['PRODUCTS:LOADED']: { products: Product[] };
-    /** Публикуется при ошибке загрузки списка товаров. */
-    ['ERROR:PRODUCTS:LOAD']: LoadProductsError;
-};
-
-/**
- * Модель каталога товаров.
- * Управляет загрузкой списка товаров, их хранением и выбором конкретного товара.
- * Публикует события, описанные в `EventMap`.
- */
-export class CatalogModel extends EventEmitter<EventMap> {
-    private _productApi: ProductApi;
+export class CatalogModel {
     private _products: Map<ProductId, Product>;
 
-    /**
-     * Создаёт экземпляр `CatalogModel`.
-     * @param {Deps} deps - Зависимости модели.
-     */
-    constructor({ productApi }: Deps) {
-        super();
-        this._productApi = productApi;
-        this._products = new Map();
-    }
-
-    /**
-     * Инициализирует модель, запрашивая все товары через `productApi`.
-     * - При ошибке публикует событие `'ERROR:PRODUCTS:LOAD'`.
-     * - При успешной загрузке сохраняет товары в локальную карту и публикует `'PRODUCTS:LOADED'`.
-     *
-     * @returns {Promise<void>} Асинхронная операция загрузки.
-     */
-    public async init(): Promise<void> {
-        const { error, products } = await this._productApi.getAll();
-
-        if (error) {
-            this.emit('ERROR:PRODUCTS:LOAD', error);
-            return;
-        }
-        else {
-            this._products = new Map(products.map(product => [product.id, product]));
-            this.emit('PRODUCTS:LOADED', { products });
-        }
+    constructor(products: Product[]) {
+        this._products = new Map(products.map(product => [product.id, product]));
     }
 
     /**
@@ -80,7 +29,7 @@ export class CatalogModel extends EventEmitter<EventMap> {
     }
 
     /**
-     * Публикует событие `'PRODUCT:SELECTED'`.
+     * Возвращает товар по его идентификатору если он есть в каталоге, иначе пробрасывает ошибку.
      *
      * @param {ProductId} id - Идентификатор товара для выбора.
      * @throws {ProductNotFoundError} Выбрасывается если товар с таким id отсутствует.

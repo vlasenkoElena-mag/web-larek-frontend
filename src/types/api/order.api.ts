@@ -1,4 +1,4 @@
-import type { Order, OrderParams } from '..';
+import type { OrderParams } from '..';
 import type { CreateOrderError } from '../../components/api/errors/order-creation-error';
 
 export type CreateOrderResult = { order: { id: string; total: number }; error: null }
