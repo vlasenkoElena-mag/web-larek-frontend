@@ -1,4 +1,4 @@
-import type { ProductId, Observable, Product, Renderer } from '..';
+import type { ProductId, Observable, Product, Renderer } from '../index.ts';
 
 /** События представления каталога. */
 export type CatalogViewEvents = {

@@ -1,5 +1,5 @@
-import { OrderCreationResponse, OrderParams, Product } from '../../types';
-import { CreateOrderResult, OrderApi as IOrderApi } from '../../types/api/order.api';
+import type { OrderCreationResponse, OrderParams } from '../../types/index.ts';
+import type { CreateOrderResult, OrderApi as IOrderApi } from '../../types/api/order.api';
 import { Api } from '../base/api';
 import { LoadProductsError } from './errors/product-list-loading-error';
 
@@ -8,7 +8,8 @@ export class OrderApi extends Api implements IOrderApi {
         try {
             const result = await this.post('/order', order) as OrderCreationResponse;
             return { error: null, order: result };
-        } catch (error) { 
+        }
+        catch (error) {
             return { error: new LoadProductsError(error), order: null };
         }
     }

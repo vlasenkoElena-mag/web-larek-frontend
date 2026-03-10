@@ -1,5 +1,6 @@
-import { Observable } from '../../types';
-import { EventEmitter, EventHandler } from './event-emitter';
+import type { Observable } from '../../types';
+import type { EventHandler } from './event-emitter';
+import { EventEmitter } from './event-emitter';
 
 /**
  * Базовый класс наблюдаемого объекта, которые эмитят события и предоставляют метод для подписки на них.
