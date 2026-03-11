@@ -1,12 +1,12 @@
-@use "variables" as *;
-@use "mixins";
+@use "../scss/variables" as *;
+@use "../scss/mixins/index" as mixins;
 
 .header {
   height: $headerHeight;
   background-color: $primary;
 
   &__container {
-    @include mixins.container(45px,45px);
+    @include mixins.container(45px, 45px);
     @include mixins.flex(row);
     align-items: center;
     justify-content: space-between;

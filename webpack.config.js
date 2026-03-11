@@ -54,7 +54,7 @@ const config = {
           options: {
             sourceMap: true,
             sassOptions: {
-              includePaths: ["src/scss"]
+              includePaths: [path.resolve(__dirname, 'src', 'scss')]
             }
           }
         }],
