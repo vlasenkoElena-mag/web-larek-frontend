@@ -5,6 +5,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { DefinePlugin } = require('webpack');
 const TerserPlugin = require("terser-webpack-plugin");
+const CopyPlugin = require('copy-webpack-plugin');
 
 require('dotenv').config({
   path: path.join(process.cwd(), process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env')
@@ -24,6 +25,10 @@ const config = {
     open: true,
     host: "localhost",
     watchFiles: ["src/pages/*.html"],
+    static: {
+      directory: path.resolve(__dirname, 'src', 'images'),
+      publicPath: '/images',
+    },
     hot: true
   },
   plugins: [
@@ -32,6 +37,12 @@ const config = {
     }),
 
     new MiniCssExtractPlugin(),
+
+    new CopyPlugin({
+      patterns: [
+        { from: path.resolve(__dirname, 'src', 'images'), to: path.resolve(__dirname, 'dist', 'images') }
+      ]
+    }),
 
     // Add your plugins here
     // Learn more about plugins from https://webpack.js.org/configuration/plugins/
