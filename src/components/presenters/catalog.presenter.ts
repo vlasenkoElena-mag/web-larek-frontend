@@ -1,14 +1,14 @@
-import type { ProductId } from '../../types';
-import { CreateOrderResult, OrderApi } from '../../types/api/order.api';
+// import type { ProductId } from '../../types';
+import type { CreateOrderResult, OrderApi } from '../../types/api/order.api';
 import { type CartView } from '../../types/views/cart.view';
 import type { CatalogView } from '../../types/views/catalog.view';
 import type { ContactsView } from '../../types/views/contacts.view';
 import type { OrderCreationResultView } from '../../types/views/order-creation-result.view';
 import type { OrderDetailsView } from '../../types/views/order-details.view';
 import { type ProductCardView } from '../../types/views/product.view';
-import { CartModel } from '../models/cart.model';
+// import { CartModel } from '../models/cart.model';
 import type { CatalogModel } from '../models/catalog.model';
-import { CustomerModel } from '../models/customer.model';
+// import { CustomerModel } from '../models/customer.model';
 
 /**
  * Зависимости `CatalogPresenter`.
@@ -16,11 +16,11 @@ import { CustomerModel } from '../models/customer.model';
  */
 export type Deps = {
     /** модель корзины */
-    cartModel: CartModel;
+    // cartModel: CartModel;
     /** модель каталога */
     catalogModel: CatalogModel;
     /** модель покупателя */
-    customerModel: CustomerModel;
+    // customerModel: CustomerModel;
     /** API заказа */
     orderApi: OrderApi;
     /** представление каталога */
@@ -28,26 +28,26 @@ export type Deps = {
     /** представление модального окна показа товара */
     productModalView: ProductCardView;
     /** представление модальной формы для ввода деталей заказа */
-    orderDetailsView: OrderDetailsView;
+    // orderDetailsView: OrderDetailsView;
     /** представление модальной формы для ввода контактных данных */
-    contactsModalView: ContactsView;
+    // contactsModalView: ContactsView;
     /** представление корзины товаров */
     cartView: CartView;
     /** представление результата создания заказа. */
-    orderCreationResultView: OrderCreationResultView;
+    // orderCreationResultView: OrderCreationResultView;
 };
 
 /** Презентер каталога. */
 export class CatalogPresenter {
-    private _cartModel: CartModel;
+    // private _cartModel: CartModel;
     private _catalogModel: CatalogModel;
-    private _customerModel: CustomerModel;
+    // private _customerModel: CustomerModel;
     private _catalogView: CatalogView;
     private _productView: ProductCardView;
-    private _orderDetailView: OrderDetailsView;
-    private _contactsView: ContactsView;
+    // private _orderDetailView: OrderDetailsView;
+    // private _contactsView: ContactsView;
     private _cartView: CartView;
-    private _orderCreationResultView: OrderCreationResultView;
+    // private _orderCreationResultView: OrderCreationResultView;
     private _orderApi: OrderApi;
 
     /**
@@ -56,27 +56,27 @@ export class CatalogPresenter {
      */
     constructor(deps: Deps) {
         const {
-            cartModel,
+            // cartModel,
             catalogModel,
-            customerModel,
+            // customerModel,
             catalogView,
             productModalView,
-            orderDetailsView,
-            contactsModalView,
+            // orderDetailsView,
+            // contactsModalView,
             cartView,
-            orderCreationResultView,
+            // orderCreationResultView,
             orderApi,
         } = deps;
 
         this._catalogView = catalogView;
         this._productView = productModalView;
-        this._orderDetailView = orderDetailsView;
-        this._contactsView = contactsModalView;
+        // this._orderDetailView = orderDetailsView;
+        // this._contactsView = contactsModalView;
         this._cartView = cartView;
-        this._cartModel = cartModel;
-        this._customerModel = customerModel;
+        // this._cartModel = cartModel;
+        // this._customerModel = customerModel;
         this._catalogModel = catalogModel;
-        this._orderCreationResultView = orderCreationResultView;
+        // this._orderCreationResultView = orderCreationResultView;
         this._orderApi = orderApi;
     }
 
@@ -85,53 +85,57 @@ export class CatalogPresenter {
      * связывает их между собой и запускает отображение каталога при загрузке.
      */
     init() {
-        this._catalogView.render(this._cartModel.products);
-
-        this._catalogView.on(
-            'PRODUCT:SELECTED',
-            ({ productId }) => { 
-                const product = this._catalogModel.getProduct(productId);
-                this._productView.render(product);
-                this._productView.setButtonDisabledState(this._cartModel.has(product.id));
-            },
+        this._catalogModel.on('PRODUCTS:LOADED', ({ products }) => {
+            this._catalogView.render(products);
+        },
         );
+        this._catalogModel.loadProducts();
+        // this._catalogView.on(
+        //     'PRODUCT:SELECTED',
+        //     ({ productId }) => {
+        //         const product = this._catalogModel.getProduct(productId);
+        //         this._productView.render(product);
+        //         this._productView.setButtonDisabledState(this._cartModel.has(product.id));
+        //     },
+        // );
 
-        this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
-            this._cartModel.addProduct(product);
-            this._cartView.render(this._cartModel.products);
-            this._productView.setButtonDisabledState(true);
-        });
+        //     this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
+        //         this._cartModel.addProduct(product);
+        //         this._cartView.render(this._cartModel.products);
+        //         this._productView.setButtonDisabledState(true);
+        //     });
 
-        this._cartView.on('BUTTON-CLICK:REMOVE-PRODUCT', ({ productId }) => {
-            this._cartModel.removeProduct(productId);
-            this._cartView.render(this._cartModel.products);
-        });
+        //     this._cartView.on('BUTTON-CLICK:REMOVE-PRODUCT', ({ productId }) => {
+        //         this._cartModel.removeProduct(productId);
+        //         this._cartView.render(this._cartModel.products);
+        //     });
 
-        this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
-            this._orderDetailView.render(this._customerModel.orderDetails);
-        });
+        //     this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
+        //         this._orderDetailView.render(this._customerModel.orderDetails);
+        //     });
 
-        this._orderDetailView.on('FORM-SUBMIT', orderDetails => {
-            this._customerModel.setOrderDetails(orderDetails);
-            this._contactsView.render(this._customerModel.contacts);
-        });
+        //     this._orderDetailView.on('FORM-SUBMIT', orderDetails => {
+        //         this._customerModel.setOrderDetails(orderDetails);
+        //         this._contactsView.render(this._customerModel.contacts);
+        //     });
 
-        this._contactsView.on('FORM-SUBMIT', async contacts => {
-            this._customerModel.setContacts(contacts);
-            const { error, order} = await this._createOrder();
+        //     this._contactsView.on('FORM-SUBMIT', async contacts => {
+        //         this._customerModel.setContacts(contacts);
+        //         const { error, order} = await this._createOrder();
 
-            if (error) {
-                throw error; // TODO add error view, нет шаблона для отображения ошибки
-            }
+        //         if (error) {
+        //             throw error; // TODO add error view, нет шаблона для отображения ошибки
+        //         }
 
-            this._orderCreationResultView.render({ totalPrice: order.total });
-        });
-    }
+        //         this._orderCreationResultView.render({ totalPrice: order.total });
+        //     });
+        // }
 
-    private _createOrder(): Promise<CreateOrderResult> {
-        return this._orderApi.create({
-            ...this._cartModel.getValidItems(),
-            ...this._customerModel.getValidCustomerInfo(),
-        });
+        // private _createOrder(): Promise<CreateOrderResult> {
+        //     return this._orderApi.create({
+        //         ...this._cartModel.getValidItems(),
+        //         ...this._customerModel.getValidCustomerInfo(),
+        //     });
+        // }
     }
 }
