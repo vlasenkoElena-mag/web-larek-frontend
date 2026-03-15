@@ -2,7 +2,7 @@ import type { Product } from '../../../types';
 import { ensureElement } from '../../../utils/utils';
 import { formatPrice } from '../../../utils/simple-utils';
 import { ObservableObject } from '../../base/observable-object';
-import { ProductModalViewEvents, ProductCardView } from '../../../types/views/product.view';
+import type { ProductModalViewEvents, ProductCardView } from '../../../types/views/product.view';
 
 /** Параметры для создания представления продукта. */
 export type ProductViewParams = {
@@ -27,10 +27,10 @@ export type ProductViewParams = {
 export class ProductCardBrowserView extends ObservableObject<ProductModalViewEvents> implements ProductCardView {
     /** Корневой элемент карточки товара */
     public readonly element: HTMLElement;
-    
+
     /** текущий отображаемй продукт */
     private _product: Product | null;
-    
+
     /** Элемент отображения цены товара */
     private _priceElement: HTMLElement;
 
@@ -66,7 +66,7 @@ export class ProductCardBrowserView extends ObservableObject<ProductModalViewEve
         this._titleElement = ensureElement('.card__title', productCardElement);
         this._imageElement = (ensureElement('.card__image', productCardElement) as HTMLImageElement);
         this._buyButtonElement = ensureElement('.button', productCardElement) as HTMLButtonElement;
-        this._product = null;        
+        this._product = null;
 
         this._buyButtonElement.addEventListener('click', () => {
             this._emit('BUTTON-CLICK:BUY', this._makeBuyButtonClickPayload());
@@ -99,7 +99,7 @@ export class ProductCardBrowserView extends ObservableObject<ProductModalViewEve
         this._priceElement.textContent = formatPrice(price ?? 0);
         this._titleElement.textContent = title;
         this._descriptionElement.textContent = description;
-        this._imageElement.src = image;
+        this._imageElement.src = `/images${image}`;
     }
 
     _makeBuyButtonClickPayload(): ProductModalViewEvents['BUTTON-CLICK:BUY'] {

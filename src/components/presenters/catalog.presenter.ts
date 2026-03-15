@@ -90,14 +90,20 @@ export class CatalogPresenter {
         },
         );
         this._catalogModel.loadProducts();
-        // this._catalogView.on(
-        //     'PRODUCT:SELECTED',
-        //     ({ productId }) => {
-        //         const product = this._catalogModel.getProduct(productId);
-        //         this._productView.render(product);
-        //         this._productView.setButtonDisabledState(this._cartModel.has(product.id));
-        //     },
-        // );
+
+        this._catalogView.on(
+            'PRODUCT:SELECTED',
+            ({ productId }) => {
+                this._catalogModel.loadProductById(productId)
+                    .then(product => {
+                        this._productView.render(product);
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+                // this._productView.setButtonDisabledState(this._cartModel.has(product.id));
+            },
+        );
 
         //     this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
         //         this._cartModel.addProduct(product);

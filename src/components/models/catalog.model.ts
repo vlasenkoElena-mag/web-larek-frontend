@@ -43,7 +43,7 @@ export class CatalogModel extends ObservableObject<ProductsModelEvents> implemen
      * @throws {ProductNotFoundError} Выбрасывается если товар с таким id отсутствует.
      */
 
-    public async loadProductById(id: string): Promise<void> {
+    public async loadProductById(id: string): Promise<Product> {
         const { product, error } = await this.api.getProductById(id);
         if (isNil(product)) {
             throw new ProductNotFoundError(id);
@@ -54,6 +54,7 @@ export class CatalogModel extends ObservableObject<ProductsModelEvents> implemen
         else {
             console.error(error);
         }
+        return product;
     }
 
     protected _emit<EventName extends keyof ProductsModelEvents>(

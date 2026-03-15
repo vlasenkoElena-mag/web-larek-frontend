@@ -29,12 +29,16 @@ export class CatalogBrowserView extends ObservableObject<CatalogViewEvents> impl
             el.dataset.productId = product.id;
 
             el.addEventListener('click', () => {
-                this._emit('PRODUCT:SELECTED', { productId: product.id });
+                this.handleCardClick(product.id);
             });
 
             return el as HTMLElement;
         });
 
         setChildren(this._root, items);
+    }
+
+    private handleCardClick(productId: string): void {
+        this._emit('PRODUCT:SELECTED', { productId });
     }
 }

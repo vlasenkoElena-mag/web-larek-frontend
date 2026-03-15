@@ -3,12 +3,13 @@
 
 .modal {
   @include mixins.sublayer;
-  // height: max-content;
-  position: absolute;
+  position: fixed;
   display: none;
+  inset: 0;
   justify-content: center;
+  align-items: center;
   background-color: $overlayBackground;
-  z-index: 100;
+  z-index: 1000;
   padding-top: 5vh;
   padding-bottom: 5vh;
   box-sizing: border-box;
@@ -22,7 +23,6 @@
     @include mixins.flex(column);
     gap: $defaultPadding;
     background-color: $background;
-    // min-height: 90vmin;
     border-radius: 3rem;
     box-sizing: border-box;
     position: relative;
@@ -68,4 +68,10 @@
       color: $error;
     }
   }
+}
+
+html.modal-open,
+body.modal-open {
+  height: 100%;
+  overflow: hidden;
 }

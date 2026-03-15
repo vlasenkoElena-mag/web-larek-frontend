@@ -1,6 +1,5 @@
 import {
     ensureElement,
-    getModalContentContainer,
     setChildren,
 } from '../../../utils/utils';
 
@@ -47,9 +46,10 @@ export class ModalBrowserView {
         this._rootElement = rootElement;
         this._contentContainer = ensureElement('.modal__content', rootElement);
         this._closeButton = ensureElement('.modal__close', rootElement);
-        
+
         this._closeButton.addEventListener('click', () => {
             this._rootElement.classList.remove('modal_active');
+            document.body.classList.remove('modal-open');
         });
     }
 
@@ -67,11 +67,13 @@ export class ModalBrowserView {
     show(): void {
         this._isOpened = true;
         this._rootElement.classList.add('modal_active');
+        document.body.classList.add('modal-open');
     }
 
     /** Скрывает модальное окно и сбрасывает флаг `isOpened`. */
     hide(): void {
         this._isOpened = false;
         this._rootElement.classList.remove('modal_active');
+        document.body.classList.remove('modal-open');
     }
 }
