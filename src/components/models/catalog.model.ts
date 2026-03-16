@@ -56,11 +56,4 @@ export class CatalogModel extends ObservableObject<ProductsModelEvents> implemen
         }
         return product;
     }
-
-    protected _emit<EventName extends keyof ProductsModelEvents>(
-        eventName: EventName,
-        payload: ProductsModelEvents[EventName],
-    ): void {
-        super._emit(eventName, payload);
-    }
 }

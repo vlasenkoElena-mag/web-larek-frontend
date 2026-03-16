@@ -14,7 +14,7 @@ export class CatalogBrowserView extends ObservableObject<CatalogViewEvents> impl
 
     render(products: Product[]): void {
         const items: HTMLElement[] = products.map(product => {
-            const el = cloneTemplate<HTMLButtonElement>('card-catalog');
+            const el = cloneTemplate<HTMLElement>('card-catalog');
 
             const category = el.querySelector('.card__category') as HTMLElement | null;
             const title = el.querySelector('.card__title') as HTMLElement | null;
