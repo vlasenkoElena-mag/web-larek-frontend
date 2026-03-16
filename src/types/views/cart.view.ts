@@ -1,4 +1,4 @@
-import type { ProductId, Observable, Product, Renderer } from '..';
+import type { ProductId, Observable, Product, Renderer } from '../../types/index';
 
 /** События представления корзины. */
 export type CartViewEvents = {
@@ -11,3 +11,5 @@ export type CartViewEvents = {
 
 /** Тип представления корзины. */
 export type CartView = Observable<CartViewEvents> & Renderer<Product[]>;
+
+export type CartModalView = CartView;
