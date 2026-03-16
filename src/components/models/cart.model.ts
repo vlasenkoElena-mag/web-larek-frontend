@@ -1,11 +1,13 @@
 import type { ProductId, Product, OrderItems } from '../../types';
+import type { CartModelEvents, CartModel as ICartModel } from '../../types/model/model';
 import { isNil } from '../../utils/simple-utils';
 import { EmptyCartOrderCreationError } from '../api/errors/empty-cart-order-creation-error';
+import { ObservableObject } from '../base/observable-object';
 
 /**
  * Модель корзины, содержит продукты добавленные пользователем и логику формирования `OrderItems`.
  */
-export class CartModel {
+export class CartModel extends ObservableObject<CartModelEvents> implements ICartModel {
     private _products: Product[] = [];
 
     get products(): Product[] {
@@ -30,12 +32,13 @@ export class CartModel {
         }
 
         this._products.push(product);
-
+        this._emit('CART:UPDATED', { products: this.products });
     }
 
     /** Удаляет товар из корзины */
     public removeProduct(productId: ProductId): void {
         this._products = this._products.filter(p => p.id !== productId);
+        this._emit('CART:UPDATED', { products: this.products });
     }
 
     /** Возвращает данные корзины в формате требуемом для создания заказа. */
@@ -43,7 +46,6 @@ export class CartModel {
         if (this._products.length === 0) {
             throw new EmptyCartOrderCreationError();
         }
-        
         return {
             items: this._products.map(p => p.id),
             total: this._products.reduce((sum, p) => sum + (p.price ?? 0), 0),
@@ -53,5 +55,6 @@ export class CartModel {
     /** Очищает корзину. */
     public clear(): void {
         this._products = [];
+        this._emit('CART:UPDATED', { products: this.products });
     }
 }

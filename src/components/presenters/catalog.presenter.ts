@@ -1,13 +1,14 @@
 // import type { ProductId } from '../../types';
 import type { CreateOrderResult, OrderApi } from '../../types/api/order.api';
+import type { CartModel } from '../../types/model/model';
 import { type CartView } from '../../types/views/cart.view';
 import type { CatalogView } from '../../types/views/catalog.view';
 import type { ContactsView } from '../../types/views/contacts.view';
 import type { OrderCreationResultView } from '../../types/views/order-creation-result.view';
 import type { OrderDetailsView } from '../../types/views/order-details.view';
 import { type ProductCardView } from '../../types/views/product.view';
-// import { CartModel } from '../models/cart.model';
 import type { CatalogModel } from '../models/catalog.model';
+import type { HeaderView } from '../views/header.view';
 // import { CustomerModel } from '../models/customer.model';
 
 /**
@@ -16,7 +17,7 @@ import type { CatalogModel } from '../models/catalog.model';
  */
 export type Deps = {
     /** модель корзины */
-    // cartModel: CartModel;
+    cartModel: CartModel;
     /** модель каталога */
     catalogModel: CatalogModel;
     /** модель покупателя */
@@ -35,11 +36,13 @@ export type Deps = {
     cartView: CartView;
     /** представление результата создания заказа. */
     // orderCreationResultView: OrderCreationResultView;
+    /** представление хедера. */
+    headerView: HeaderView;
 };
 
 /** Презентер каталога. */
 export class CatalogPresenter {
-    // private _cartModel: CartModel;
+    private _cartModel: CartModel;
     private _catalogModel: CatalogModel;
     // private _customerModel: CustomerModel;
     private _catalogView: CatalogView;
@@ -49,6 +52,7 @@ export class CatalogPresenter {
     private _cartView: CartView;
     // private _orderCreationResultView: OrderCreationResultView;
     private _orderApi: OrderApi;
+    private _headerView: HeaderView;
 
     /**
      * Создаёт экземпляр `CatalogPresenter`.
@@ -56,7 +60,7 @@ export class CatalogPresenter {
      */
     constructor(deps: Deps) {
         const {
-            // cartModel,
+            cartModel,
             catalogModel,
             // customerModel,
             catalogView,
@@ -66,6 +70,7 @@ export class CatalogPresenter {
             cartView,
             // orderCreationResultView,
             orderApi,
+            headerView,
         } = deps;
 
         this._catalogView = catalogView;
@@ -73,11 +78,12 @@ export class CatalogPresenter {
         // this._orderDetailView = orderDetailsView;
         // this._contactsView = contactsModalView;
         this._cartView = cartView;
-        // this._cartModel = cartModel;
+        this._cartModel = cartModel;
         // this._customerModel = customerModel;
         this._catalogModel = catalogModel;
         // this._orderCreationResultView = orderCreationResultView;
         this._orderApi = orderApi;
+        this._headerView = headerView;
     }
 
     /**
@@ -101,9 +107,13 @@ export class CatalogPresenter {
                     .catch(error => {
                         console.error(error);
                     });
-                // this._productView.setButtonDisabledState(this._cartModel.has(product.id));
+                this._productView.setButtonDisabledState(this._cartModel.has(productId));
             },
         );
+
+        this._headerView.on('BASKET:OPEN', () => {
+            this._cartView.render(this._cartModel.products || []);
+        });
 
         //     this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
         //         this._cartModel.addProduct(product);
