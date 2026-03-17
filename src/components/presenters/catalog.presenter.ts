@@ -126,6 +126,10 @@ export class CatalogPresenter {
             this._productView.setButtonDisabledState(false);
         });
 
+        this._cartModel.on('CART:UPDATED', ({ products }) => {
+            this._headerView.setCartCounter(products.length);
+        });
+
         //     this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
         //         this._orderDetailView.render(this._customerModel.orderDetails);
         //     });
