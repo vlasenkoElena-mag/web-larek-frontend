@@ -115,11 +115,11 @@ export class CatalogPresenter {
             this._cartView.render(this._cartModel.products || []);
         });
 
-        //     this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
-        //         this._cartModel.addProduct(product);
-        //         this._cartView.render(this._cartModel.products);
-        //         this._productView.setButtonDisabledState(true);
-        //     });
+        this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
+            console.log('product: ', product);
+            this._cartModel.addProduct(product);
+            this._productView.setButtonDisabledState(true);
+        });
 
         //     this._cartView.on('BUTTON-CLICK:REMOVE-PRODUCT', ({ productId }) => {
         //         this._cartModel.removeProduct(productId);
