@@ -13,6 +13,7 @@ export class CartModalBrowserView extends ObservableObject<CartViewEvents> imple
         const modalRoot = document.getElementById('cart-modal') as HTMLElement;
         this._modal = new ModalBrowserView({ rootElement: modalRoot });
         this._cartView = new CartBrowserView();
+        this._cartView.on('BUTTON-CLICK:REMOVE-PRODUCT', payload => this._emit('BUTTON-CLICK:REMOVE-PRODUCT', payload));
     }
 
     render(products: Product[]): void {
