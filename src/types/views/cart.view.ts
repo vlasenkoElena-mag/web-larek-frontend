@@ -1,4 +1,4 @@
-import type { ProductId, Observable, Product, Renderer } from '../../types/index';
+import type { ProductId, Observable, Product } from '../../types/index';
 
 /** События представления корзины. */
 export type CartViewEvents = {
@@ -10,6 +10,15 @@ export type CartViewEvents = {
 };
 
 /** Тип представления корзины. */
-export type CartView = Observable<CartViewEvents> & Renderer<Product[]>;
+export type CartView = Observable<CartViewEvents> & {
+    /** Отрисовать список товаров; если `showModal` истинно — показать модал */
+    render(products: Product[], showModal?: boolean): void;
+
+    /** Устанавливает общую сумму корзины для отображения */
+    setTotalPrice(totalPrice: number): void;
+
+    /** Устанавливает состояние кнопки оформления заказа (активна/неактивна) */
+    setOrderButtonDisabledState(disabled: boolean): void;
+};
 
 export type CartModalView = CartView;

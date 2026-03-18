@@ -3,14 +3,17 @@ import type { CartView, CartViewEvents } from '../../types/views/cart.view';
 import { formatPrice } from '../../utils/simple-utils';
 import { cloneTemplate, ensureElement, setChildren } from '../../utils/utils';
 import { ObservableObject } from '../base/observable-object';
-
-// TODO не реализовано
 export class CartBrowserView extends ObservableObject<CartViewEvents> implements CartView {
     private _root: HTMLElement;
+    private _emptyMessageEl: HTMLElement;
+    private _orderButton: HTMLButtonElement;
 
     constructor() {
         super();
         this._root = ensureElement('.basket__list') as HTMLElement;
+        this._emptyMessageEl = ensureElement('.basket__empty') as HTMLElement;
+        const orderButtonRoot = ensureElement('.basket') as HTMLElement;
+        this._orderButton = ensureElement('.button', orderButtonRoot) as HTMLButtonElement;
     }
 
     render(products: Product[]): void {
@@ -32,6 +35,22 @@ export class CartBrowserView extends ObservableObject<CartViewEvents> implements
             }
             return el as HTMLElement;
         });
+        if (products.length === 0) {
+            this._emptyMessageEl.textContent = 'В корзине пока ничего нет...';
+        }
+        else {
+            this._emptyMessageEl.textContent = '';
+        }
         setChildren(this._root, items);
+        this.setOrderButtonDisabledState(products.length === 0);
     };
+
+    setOrderButtonDisabledState(disabled: boolean): void {
+        this._orderButton.disabled = disabled;
+    }
+
+    setTotalPrice(totalPrice: number): void {
+        const totalPriceEl = ensureElement('.basket__price') as HTMLElement;
+        totalPriceEl.textContent = `${formatPrice(totalPrice)}`;
+    }
 }

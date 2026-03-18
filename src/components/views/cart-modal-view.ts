@@ -16,8 +16,18 @@ export class CartModalBrowserView extends ObservableObject<CartViewEvents> imple
         this._cartView.on('BUTTON-CLICK:REMOVE-PRODUCT', payload => this._emit('BUTTON-CLICK:REMOVE-PRODUCT', payload));
     }
 
-    render(products: Product[]): void {
+    render(products: Product[], showModal = true): void {
         this._cartView.render(products);
-        this._modal.show();
+        if (showModal) {
+            this._modal.show();
+        }
+    }
+
+    setTotalPrice(totalPrice: number): void {
+        this._cartView.setTotalPrice(totalPrice);
+    }
+
+    setOrderButtonDisabledState(disabled: boolean): void {
+        this._cartView.setOrderButtonDisabledState(disabled);
     }
 }

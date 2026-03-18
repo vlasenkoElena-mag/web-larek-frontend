@@ -14,6 +14,7 @@ export type ProductsModel = Observable<ProductsModelEvents>;
 export type CartModelEvents = {
     /** публикуется при обновлении содержимого корзины */
     ['CART:UPDATED']: { products: Product[] };
+    ['TOTAL-PRICE:UPDATED']: { totalPrice: number };
 };
 
 export type CartModel = Observable<CartModelEvents> & {
@@ -31,4 +32,7 @@ export type CartModel = Observable<CartModelEvents> & {
 
     /** Возвращает валидные позиции для создания заказа. */
     getValidItems?(): unknown;
+
+    /** Общая сумма корзины */
+    totalPrice: number;
 };

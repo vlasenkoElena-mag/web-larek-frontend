@@ -12,4 +12,4 @@ export const assert = (predicate: boolean, errorMessage: string) => {
 
 export const asArray = <T>(value: T | T[]): T[] => Array.isArray(value) ? value : [value];
 
-export const formatPrice = (price: number): string => `$${price} синапсов`;
+export const formatPrice = (price: number): string => `${price} синапсов`;

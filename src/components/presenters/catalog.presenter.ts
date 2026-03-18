@@ -113,6 +113,8 @@ export class CatalogPresenter {
 
         this._headerView.on('BASKET:OPEN', () => {
             this._cartView.render(this._cartModel.products || []);
+            this._cartView.setTotalPrice(this._cartModel.totalPrice);
+            this._cartView.setOrderButtonDisabledState((this._cartModel.products || []).length === 0);
         });
 
         this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
@@ -122,12 +124,16 @@ export class CatalogPresenter {
 
         this._cartView.on('BUTTON-CLICK:REMOVE-PRODUCT', ({ productId }) => {
             this._cartModel.removeProduct(productId);
-            this._cartView.render(this._cartModel.products || []);
             this._productView.setButtonDisabledState(false);
         });
 
         this._cartModel.on('CART:UPDATED', ({ products }) => {
             this._headerView.setCartCounter(products.length);
+            this._cartView.render(products || [], false);
+        });
+
+        this._cartModel.on('TOTAL-PRICE:UPDATED', ({ totalPrice }) => {
+            this._cartView.setTotalPrice(totalPrice);
         });
 
         //     this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
