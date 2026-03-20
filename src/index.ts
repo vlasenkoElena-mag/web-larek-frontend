@@ -4,11 +4,12 @@ import { CartModel } from './components/models/cart.model';
 import { CatalogModel } from './components/models/catalog.model';
 import { CustomerModel } from './components/models/customer.model';
 import { CatalogPresenter } from './components/presenters/catalog.presenter';
-import { CartModalBrowserView } from './components/views/cart-modal-view';
+import { CartModalBrowserView } from './components/views/cart/cart-modal-view';
 import { CatalogBrowserView } from './components/views/catalog.view';
 import { ContactsBrowserView } from './components/views/contacts.view';
 import { HeaderBrowserView } from './components/views/header.view';
 import { OrderCreationResultBrowserView } from './components/views/order-creation-result.view';
+import { OrderDetailsModalBrowserView } from './components/views/order-details-modal.view';
 // import { OrderDetailsBrowserView } from './components/views/order-details.view';
 import { ProductModalBrowserView } from './components/views/product/product-modal.view';
 import { BASE_API_URL } from './config/api-config';
@@ -20,10 +21,10 @@ const run = async () => {
     const presenter = new CatalogPresenter({
         catalogModel: new CatalogModel(productApi),
         cartModel: new CartModel(),
-        // customerModel: new CustomerModel(),
+        customerModel: new CustomerModel(),
         cartView: new CartModalBrowserView(),
         catalogView: new CatalogBrowserView(),
-        // orderDetailsView: new OrderDetailsBrowserView(),
+        orderDetailsView: new OrderDetailsModalBrowserView(),
         productModalView: new ProductModalBrowserView(),
         // contactsModalView: new ContactsBrowserView(),
         // orderCreationResultView: new OrderCreationResultBrowserView(),

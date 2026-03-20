@@ -1,25 +1,30 @@
-import type { CartModalView, CartViewEvents } from '../../types/views/cart.view';
-import type { Product } from '../../types';
-import { ModalBrowserView } from './common/modal.view';
-import { ObservableObject } from '../base/observable-object';
-import { CartBrowserView } from './cart/cart.view';
+import type { CartModalView, CartViewEvents } from '../../../types/views/cart.view';
+import type { Product } from '../../../types';
+import { CartBrowserView } from './cart.view';
+import { ModalBrowserView } from '../common/modal.view';
 
-export class CartModalBrowserView extends ObservableObject<CartViewEvents> implements CartModalView {
+export class CartModalBrowserView implements CartModalView {
     private _modal: ModalBrowserView;
     private _cartView: CartBrowserView;
 
     constructor() {
-        super();
         const modalRoot = document.getElementById('cart-modal') as HTMLElement;
         this._modal = new ModalBrowserView({ rootElement: modalRoot });
         this._cartView = new CartBrowserView();
-        this._cartView.on('BUTTON-CLICK:REMOVE-PRODUCT', payload => this._emit('BUTTON-CLICK:REMOVE-PRODUCT', payload));
+    }
+
+    on<E extends keyof CartViewEvents>(event: E, handler: (payload: CartViewEvents[E]) => void): void {
+        this._cartView.on(event, handler);
     }
 
     render(products: Product[], showModal = true): void {
         this._cartView.render(products);
+
         if (showModal) {
             this._modal.show();
+        }
+        else {
+            this._modal.hide();
         }
     }
 

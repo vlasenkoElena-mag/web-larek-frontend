@@ -5,11 +5,11 @@ import { type CartView } from '../../types/views/cart.view';
 import type { CatalogView } from '../../types/views/catalog.view';
 import type { ContactsView } from '../../types/views/contacts.view';
 import type { OrderCreationResultView } from '../../types/views/order-creation-result.view';
-import type { OrderDetailsView } from '../../types/views/order-details.view';
+import type { OrderDetailsFormView as OrderDetailsBrowserView, OrderDetailsModalView } from '../../types/views/order-details.view';
 import { type ProductCardView } from '../../types/views/product.view';
 import type { CatalogModel } from '../models/catalog.model';
+import type { CustomerModel } from '../models/customer.model';
 import type { HeaderView } from '../views/header.view';
-// import { CustomerModel } from '../models/customer.model';
 
 /**
  * Зависимости `CatalogPresenter`.
@@ -21,7 +21,7 @@ export type Deps = {
     /** модель каталога */
     catalogModel: CatalogModel;
     /** модель покупателя */
-    // customerModel: CustomerModel;
+    customerModel: CustomerModel;
     /** API заказа */
     orderApi: OrderApi;
     /** представление каталога */
@@ -29,7 +29,7 @@ export type Deps = {
     /** представление модального окна показа товара */
     productModalView: ProductCardView;
     /** представление модальной формы для ввода деталей заказа */
-    // orderDetailsView: OrderDetailsView;
+    orderDetailsView: OrderDetailsBrowserView;
     /** представление модальной формы для ввода контактных данных */
     // contactsModalView: ContactsView;
     /** представление корзины товаров */
@@ -44,10 +44,10 @@ export type Deps = {
 export class CatalogPresenter {
     private _cartModel: CartModel;
     private _catalogModel: CatalogModel;
-    // private _customerModel: CustomerModel;
+    private _customerModel: CustomerModel;
     private _catalogView: CatalogView;
     private _productView: ProductCardView;
-    // private _orderDetailView: OrderDetailsView;
+    private _orderDetailView: OrderDetailsModalView;
     // private _contactsView: ContactsView;
     private _cartView: CartView;
     // private _orderCreationResultView: OrderCreationResultView;
@@ -62,10 +62,10 @@ export class CatalogPresenter {
         const {
             cartModel,
             catalogModel,
-            // customerModel,
+            customerModel,
             catalogView,
             productModalView,
-            // orderDetailsView,
+            orderDetailsView,
             // contactsModalView,
             cartView,
             // orderCreationResultView,
@@ -75,11 +75,11 @@ export class CatalogPresenter {
 
         this._catalogView = catalogView;
         this._productView = productModalView;
-        // this._orderDetailView = orderDetailsView;
+        this._orderDetailView = orderDetailsView;
         // this._contactsView = contactsModalView;
         this._cartView = cartView;
         this._cartModel = cartModel;
-        // this._customerModel = customerModel;
+        this._customerModel = customerModel;
         this._catalogModel = catalogModel;
         // this._orderCreationResultView = orderCreationResultView;
         this._orderApi = orderApi;
@@ -127,6 +127,11 @@ export class CatalogPresenter {
             this._productView.setButtonDisabledState(false);
         });
 
+        this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
+            this._cartView.render(this._cartModel.products || [], false);
+            this._orderDetailView.render(this._customerModel.orderDetails);
+        });
+
         this._cartModel.on('CART:UPDATED', ({ products }) => {
             this._headerView.setCartCounter(products.length);
             this._cartView.render(products || [], false);
@@ -135,10 +140,6 @@ export class CatalogPresenter {
         this._cartModel.on('TOTAL-PRICE:UPDATED', ({ totalPrice }) => {
             this._cartView.setTotalPrice(totalPrice);
         });
-
-        //     this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
-        //         this._orderDetailView.render(this._customerModel.orderDetails);
-        //     });
 
         //     this._orderDetailView.on('FORM-SUBMIT', orderDetails => {
         //         this._customerModel.setOrderDetails(orderDetails);
