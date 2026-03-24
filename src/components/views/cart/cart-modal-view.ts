@@ -2,6 +2,7 @@ import type { CartModalView, CartViewEvents } from '../../../types/views/cart.vi
 import type { Product } from '../../../types';
 import { CartBrowserView } from './cart.view';
 import { ModalBrowserView } from '../common/modal.view';
+import type { EventHandler } from '../../base/event-emitter';
 
 export class CartModalBrowserView implements CartModalView {
     private _modal: ModalBrowserView;
@@ -13,7 +14,7 @@ export class CartModalBrowserView implements CartModalView {
         this._cartView = new CartBrowserView();
     }
 
-    on<E extends keyof CartViewEvents>(event: E, handler: (payload: CartViewEvents[E]) => void): void {
+    on<E extends keyof CartViewEvents>(event: E, handler: EventHandler<CartViewEvents, E>): void {
         this._cartView.on(event, handler);
     }
 

@@ -20,11 +20,6 @@ export class CartBrowserView extends ObservableObject<CartViewEvents> implements
         });
     }
 
-    // @ts-expect-error eqweqweqweqwe
-    on(...params: Parameters<CartView['on']>): ReturnType<CartView['on']> {
-        return super.on(...params);
-    }
-
     render(products: Product[]): void {
         const items: HTMLElement[] = products.map((product, index) => {
             const el = cloneTemplate<HTMLElement>('card-basket');
