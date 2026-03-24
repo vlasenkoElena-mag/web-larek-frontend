@@ -11,6 +11,8 @@ export class OrderDetailsFormBrowserView extends ObservableObject<OrderDetailsVi
     private _form: HTMLFormElement;
     private _addressIsValid = false;
     private _paymentMethodIsValid = false;
+    private _address = '';
+    private _paymentMethod: 'card' | 'cash' | '' = '';
 
     constructor({ form }: Params) {
         super();
@@ -37,8 +39,11 @@ export class OrderDetailsFormBrowserView extends ObservableObject<OrderDetailsVi
             }
         };
 
+        isValid();
+
         addressInput?.addEventListener('input', () => {
             this._addressIsValid = !!addressInput.value.trim();
+            this._address = addressInput.value.trim();
             isValid();
         });
 
@@ -49,23 +54,34 @@ export class OrderDetailsFormBrowserView extends ObservableObject<OrderDetailsVi
         if (orderDetails.payment === 'card') {
             paymentMethodCardEl?.classList.add('button_alt-active');
             this._paymentMethodIsValid = true;
+            this._paymentMethod = 'card';
         }
         else if (orderDetails.payment === 'cash') {
             paymentMethodCashEl?.classList.add('button_alt-active');
             this._paymentMethodIsValid = true;
+            this._paymentMethod = 'cash';
         }
 
         paymentMethodCardEl?.addEventListener('click', () => {
             paymentMethodCardEl.classList.add('button_alt-active');
             paymentMethodCashEl?.classList.remove('button_alt-active');
             this._paymentMethodIsValid = true;
+            this._paymentMethod = 'card';
             isValid();
         });
         paymentMethodCashEl?.addEventListener('click', () => {
             paymentMethodCashEl.classList.add('button_alt-active');
             paymentMethodCardEl?.classList.remove('button_alt-active');
             this._paymentMethodIsValid = true;
+            this._paymentMethod = 'cash';
             isValid();
+        });
+        this._form.addEventListener('submit', evt => {
+            evt.preventDefault();
+            this._emit('FORM-SUBMIT', {
+                address: this._address,
+                payment: this._paymentMethod,
+            });
         });
     }
 }
