@@ -29,6 +29,9 @@ export class ModalBrowserView {
     /** Корневой элемент модального окна. */
     readonly _rootElement: HTMLElement;
 
+    /** Регистр всех экземпляров модальных окон в приложении. */
+    private static _instances: ModalBrowserView[] = [];
+
     /** Элемент контейнера для содержимого модального окна. */
     _contentContainer: HTMLElement;
 
@@ -48,9 +51,10 @@ export class ModalBrowserView {
         this._closeButton = ensureElement('.modal__close', rootElement);
 
         this._closeButton.addEventListener('click', () => {
-            this._rootElement.classList.remove('modal_active');
-            document.body.classList.remove('modal-open');
+            this.hide();
         });
+
+        ModalBrowserView._instances.push(this);
     }
 
     /** Возвращает текущее состояние видимости модального окна. */
@@ -65,6 +69,13 @@ export class ModalBrowserView {
 
     /** Показывает модальное окно и выставляет внутренний флаг `isOpened`. */
     show(): void {
+        // Закрываем все остальные модальные окна перед открытием этого
+        ModalBrowserView._instances.forEach(inst => {
+            if (inst !== this) {
+                inst.hide();
+            }
+        });
+
         this._isOpened = true;
         this._rootElement.classList.add('modal_active');
         document.body.classList.add('modal-open');
@@ -74,6 +85,11 @@ export class ModalBrowserView {
     hide(): void {
         this._isOpened = false;
         this._rootElement.classList.remove('modal_active');
-        document.body.classList.remove('modal-open');
+
+        // Убираем класс body только если больше нет открытых модальных окон
+        const anyOpened = ModalBrowserView._instances.some(i => i !== this && i._isOpened === true);
+        if (!anyOpened) {
+            document.body.classList.remove('modal-open');
+        }
     }
 }
