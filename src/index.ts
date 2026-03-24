@@ -6,11 +6,10 @@ import { CustomerModel } from './components/models/customer.model';
 import { CatalogPresenter } from './components/presenters/catalog.presenter';
 import { CartModalBrowserView } from './components/views/cart/cart-modal-view';
 import { CatalogBrowserView } from './components/views/catalog.view';
-import { ContactsBrowserView } from './components/views/contacts.view';
+import { ContactsModalBrowserView } from './components/views/contacts-modal.view';
 import { HeaderBrowserView } from './components/views/header.view';
 import { OrderCreationResultBrowserView } from './components/views/order-creation-result.view';
 import { OrderDetailsModalBrowserView } from './components/views/order-details-modal.view';
-// import { OrderDetailsBrowserView } from './components/views/order-details.view';
 import { ProductModalBrowserView } from './components/views/product/product-modal.view';
 import { BASE_API_URL } from './config/api-config';
 import './scss/styles.scss';
@@ -26,7 +25,7 @@ const run = async () => {
         catalogView: new CatalogBrowserView(),
         orderDetailsView: new OrderDetailsModalBrowserView(),
         productModalView: new ProductModalBrowserView(),
-        // contactsModalView: new ContactsBrowserView(),
+        contactsView: new ContactsModalBrowserView(),
         // orderCreationResultView: new OrderCreationResultBrowserView(),
         orderApi: new OrderApi(BASE_API_URL),
         headerView: new HeaderBrowserView(),

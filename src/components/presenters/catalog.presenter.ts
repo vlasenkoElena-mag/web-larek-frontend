@@ -3,9 +3,9 @@ import type { CreateOrderResult, OrderApi } from '../../types/api/order.api';
 import type { CartModel } from '../../types/model/model';
 import { type CartView } from '../../types/views/cart.view';
 import type { CatalogView } from '../../types/views/catalog.view';
-import type { ContactsView } from '../../types/views/contacts.view';
+import type { ContactsModalView } from '../../types/views/contacts.view';
 import type { OrderCreationResultView } from '../../types/views/order-creation-result.view';
-import type { OrderDetailsFormView as OrderDetailsBrowserView, OrderDetailsModalView } from '../../types/views/order-details.view';
+import type { OrderDetailsModalView } from '../../types/views/order-details.view';
 import { type ProductCardView } from '../../types/views/product.view';
 import type { CatalogModel } from '../models/catalog.model';
 import type { CustomerModel } from '../models/customer.model';
@@ -28,10 +28,10 @@ export type Deps = {
     catalogView: CatalogView;
     /** представление модального окна показа товара */
     productModalView: ProductCardView;
-    /** представление модальной формы для ввода деталей заказа */
-    orderDetailsView: OrderDetailsBrowserView;
-    /** представление модальной формы для ввода контактных данных */
-    // contactsModalView: ContactsView;
+    /** представление модального окна для ввода деталей заказа */
+    orderDetailsView: OrderDetailsModalView;
+    /** представление модального окна для ввода контактных данных */
+    contactsView: ContactsModalView;
     /** представление корзины товаров */
     cartView: CartView;
     /** представление результата создания заказа. */
@@ -48,7 +48,7 @@ export class CatalogPresenter {
     private _catalogView: CatalogView;
     private _productView: ProductCardView;
     private _orderDetailView: OrderDetailsModalView;
-    // private _contactsView: ContactsView;
+    private _contactsView: ContactsModalView;
     private _cartView: CartView;
     // private _orderCreationResultView: OrderCreationResultView;
     private _orderApi: OrderApi;
@@ -66,7 +66,7 @@ export class CatalogPresenter {
             catalogView,
             productModalView,
             orderDetailsView,
-            // contactsModalView,
+            contactsView,
             cartView,
             // orderCreationResultView,
             orderApi,
@@ -76,7 +76,7 @@ export class CatalogPresenter {
         this._catalogView = catalogView;
         this._productView = productModalView;
         this._orderDetailView = orderDetailsView;
-        // this._contactsView = contactsModalView;
+        this._contactsView = contactsView;
         this._cartView = cartView;
         this._cartModel = cartModel;
         this._customerModel = customerModel;
@@ -141,28 +141,28 @@ export class CatalogPresenter {
             this._cartView.setTotalPrice(totalPrice);
         });
 
-        //     this._orderDetailView.on('FORM-SUBMIT', orderDetails => {
-        //         this._customerModel.setOrderDetails(orderDetails);
-        //         this._contactsView.render(this._customerModel.contacts);
-        //     });
+        this._orderDetailView.on('FORM-SUBMIT', orderDetails => {
+            this._customerModel.setOrderDetails(orderDetails);
+            this._contactsView.render(this._customerModel.contacts);
+        });
 
-        //     this._contactsView.on('FORM-SUBMIT', async contacts => {
-        //         this._customerModel.setContacts(contacts);
-        //         const { error, order} = await this._createOrder();
+        this._contactsView.on('FORM-SUBMIT', async contacts => {
+            this._customerModel.setContacts(contacts);
+            const { error, order } = await this._createOrder();
 
-        //         if (error) {
-        //             throw error; // TODO add error view, нет шаблона для отображения ошибки
-        //         }
+            if (error) {
+                throw error;
+            }
 
-        //         this._orderCreationResultView.render({ totalPrice: order.total });
-        //     });
+            // this._orderCreationResultView.render({ totalPrice: order.total });
+        });
         // }
+    }
 
-        // private _createOrder(): Promise<CreateOrderResult> {
-        //     return this._orderApi.create({
-        //         ...this._cartModel.getValidItems(),
-        //         ...this._customerModel.getValidCustomerInfo(),
-        //     });
-        // }
+    private _createOrder(): Promise<CreateOrderResult> {
+        return this._orderApi.create({
+            ...this._cartModel.getValidItems(),
+            ...this._customerModel.getValidCustomerInfo(),
+        });
     }
 }

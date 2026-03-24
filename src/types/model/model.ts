@@ -1,4 +1,4 @@
-import type { Observable, Product } from '../index.ts';
+import type { Observable, Product, OrderItems } from '../index.ts';
 
 /** События модели продуктов. */
 export type ProductsModelEvents = {
@@ -31,7 +31,7 @@ export type CartModel = Observable<CartModelEvents> & {
     products?: Product[];
 
     /** Возвращает валидные позиции для создания заказа. */
-    getValidItems?(): unknown;
+    getValidItems(): OrderItems;
 
     /** Общая сумма корзины */
     totalPrice: number;
