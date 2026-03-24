@@ -5,7 +5,7 @@ export type ProductId = string;
 export type Price = number;
 
 /** Тип способа оплаты (строка, например "card" или "cash"). */
-export type Payment =  'cash' | 'card' | '';;
+export type Payment = 'cash' | 'card' | '';
 
 /**
  * Описание товара в каталоге.
@@ -26,10 +26,9 @@ export type Product = {
 };
 
 export type OrderCreationResponse = {
-    id: string; 
+    id: string;
     total: number;
-}
-
+};
 
 /** Детали заказа. */
 export type OrderDetails = {
@@ -66,7 +65,7 @@ export type Order = OrderParams & { orderId: OrderId };
 /** Уникальный идентификатор заказа. */
 export type OrderId = string;
 
-export type CustomerInfo = Contacts & OrderDetails;;
+export type CustomerInfo = Contacts & OrderDetails;
 
 /**
  * Базовый интерфейс наблюдаемых ресурсов (например различные экземпляры)

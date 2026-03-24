@@ -6,7 +6,7 @@ import { InvalidCustomerInfoError } from '../api/errors/invalid-customer-info-er
  */
 export class CustomerModel {
     private _email = '';
-    private _phone  = '';
+    private _phone = '';
     private _address = '';
     private _payment: Payment = '';
 
@@ -31,9 +31,9 @@ export class CustomerModel {
             phone: this._phone,
             address: this._address,
             payment: this._payment,
-        }
+        };
 
-        this._validate(info)
+        this._validate(info);
 
         return info;
     }
