@@ -1,10 +1,9 @@
-// import type { ProductId } from '../../types';
 import type { CreateOrderResult, OrderApi } from '../../types/api/order.api';
 import type { CartModel } from '../../types/model/model';
-import { type CartView } from '../../types/views/cart.view';
+import type { CartModalView } from '../../types/views/cart.view';
 import type { CatalogView } from '../../types/views/catalog.view';
 import type { ContactsModalView } from '../../types/views/contacts.view';
-import type { OrderCreationResultView } from '../../types/views/order-creation-result.view';
+import type { OrderCreationResultModalView } from '../../types/views/order-creation-result.view';
 import type { OrderDetailsModalView } from '../../types/views/order-details.view';
 import { type ProductCardView } from '../../types/views/product.view';
 import type { CatalogModel } from '../models/catalog.model';
@@ -33,9 +32,9 @@ export type Deps = {
     /** представление модального окна для ввода контактных данных */
     contactsView: ContactsModalView;
     /** представление корзины товаров */
-    cartView: CartView;
+    cartView: CartModalView;
     /** представление результата создания заказа. */
-    // orderCreationResultView: OrderCreationResultView;
+    orderCreationResultView: OrderCreationResultModalView;
     /** представление хедера. */
     headerView: HeaderView;
 };
@@ -49,8 +48,8 @@ export class CatalogPresenter {
     private _productView: ProductCardView;
     private _orderDetailView: OrderDetailsModalView;
     private _contactsView: ContactsModalView;
-    private _cartView: CartView;
-    // private _orderCreationResultView: OrderCreationResultView;
+    private _cartView: CartModalView;
+    private _orderCreationResultView: OrderCreationResultModalView;
     private _orderApi: OrderApi;
     private _headerView: HeaderView;
 
@@ -68,7 +67,7 @@ export class CatalogPresenter {
             orderDetailsView,
             contactsView,
             cartView,
-            // orderCreationResultView,
+            orderCreationResultView,
             orderApi,
             headerView,
         } = deps;
@@ -81,7 +80,7 @@ export class CatalogPresenter {
         this._cartModel = cartModel;
         this._customerModel = customerModel;
         this._catalogModel = catalogModel;
-        // this._orderCreationResultView = orderCreationResultView;
+        this._orderCreationResultView = orderCreationResultView;
         this._orderApi = orderApi;
         this._headerView = headerView;
     }
@@ -113,8 +112,7 @@ export class CatalogPresenter {
 
         this._headerView.on('BASKET:OPEN', () => {
             this._cartView.render(this._cartModel.products || []);
-            this._cartView.setTotalPrice(this._cartModel.totalPrice);
-            this._cartView.setOrderButtonDisabledState((this._cartModel.products || []).length === 0);
+            this._cartView.show();
         });
 
         this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
@@ -128,17 +126,13 @@ export class CatalogPresenter {
         });
 
         this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
-            this._cartView.render(this._cartModel.products || [], false);
+            this._cartView.hide();
             this._orderDetailView.render(this._customerModel.orderDetails);
         });
 
         this._cartModel.on('CART:UPDATED', ({ products }) => {
             this._headerView.setCartCounter(products.length);
-            this._cartView.render(products || [], false);
-        });
-
-        this._cartModel.on('TOTAL-PRICE:UPDATED', ({ totalPrice }) => {
-            this._cartView.setTotalPrice(totalPrice);
+            this._cartView.render(products || []);
         });
 
         this._orderDetailView.on('FORM-SUBMIT', orderDetails => {
@@ -154,9 +148,10 @@ export class CatalogPresenter {
                 throw error;
             }
 
-            // this._orderCreationResultView.render({ totalPrice: order.total });
+            this._cartModel.clear();
+            this._orderCreationResultView.render(order.total);
+            this._customerModel.clear();
         });
-        // }
     }
 
     private _createOrder(): Promise<CreateOrderResult> {
