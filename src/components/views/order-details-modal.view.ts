@@ -22,4 +22,8 @@ export class OrderDetailsModalBrowserView implements OrderDetailsModalView {
         this._form.render(orderDetails);
         this._modal.show();
     }
+
+    setOrderButtonDisabledState(disabled: boolean): void {
+        this._form.setOrderButtonDisabledState(disabled);
+    }
 }

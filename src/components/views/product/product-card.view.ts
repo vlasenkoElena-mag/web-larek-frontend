@@ -94,15 +94,19 @@ export class ProductCardBrowserView extends ObservableObject<ProductModalViewEve
         this._buyButtonElement.disabled = disabled;
     }
 
-    _renderProduct({ title, category, price, description, image }: Product) {
+    private _renderProduct({ title, category, price, description, image }: Product) {
         this._categoryElement.textContent = category;
-        this._priceElement.textContent = formatPrice(price ?? 0);
+        this._priceElement.textContent = price === null ? 'Не продается' : formatPrice(price ?? 0);
         this._titleElement.textContent = title;
         this._descriptionElement.textContent = description;
         this._imageElement.src = `/images${image}`;
+
+        if (price === null) {
+            this._buyButtonElement.disabled = true;
+        }
     }
 
-    _makeBuyButtonClickPayload(): ProductModalViewEvents['BUTTON-CLICK:BUY'] {
+    private _makeBuyButtonClickPayload(): ProductModalViewEvents['BUTTON-CLICK:BUY'] {
         if (this._product === null) {
             throw new Error('Application logic error: publishing product-related event when product is null');
         }
