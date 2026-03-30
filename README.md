@@ -3,21 +3,37 @@
 Стек: HTML, SCSS, TS, Webpack
 
 ## Установка и запуск
+```
+npm install
+npm run start
+```
+## Сборка
+
+```
+npm run build
+```
+
+## Структура файлов проекта
 - src/ — исходные файлы проекта
 - common.blocks/ — стили блоков верстки
-- scss/ — стили
-  - components/ — реализация компонентов
+- components/ — реализация компонентов
+    - api/ — запросы к серверу
     - base/ — базовый код
     - models/ — модели данных
-    - view/ — отображения (не данном этапе не реализованы)
+    - views/ — отображения
+    - presenters —  слой управления приложением
+- config — базовый URL
+- images/ — изображения
+- public/ — статические файлы для прямого включения в сборку (см. `src/public`)
 - pages/ — страницы
+- scss/ — стили
   - index.html — основная страница и шаблоны компонентов
 - types/ — типизация
   - views/ — абстрактные типы представлений
   - api/ — абстрактные типы API
+  - model — абстрактные типы модели
   - index.ts — общие типы
 - utils/ — утилиты
-- images/ — изображения
 - vendor/ — шрифты, иконки и прочее
 - api.yaml — спецификация API
 
@@ -25,7 +41,6 @@
 
 В проекте используются базовые типы, определённые в `src/types/index.ts`:
 
-```typescript
 /** Уникальный идентификатор товара. */
 type ProductId = string;
 
@@ -108,58 +123,14 @@ type Renderer<T> = {
     render(data: T): void;
 };
 ```
-В проекте активно используется класс [OservableObject](src/components/base/observable-object.ts). Реализующий интерфейс `Observable`.
-Данный клас является оберткой над EventEmitter скрывающим все методы, кроме метода подписки(on) от клиентов класса, метод _emit(публикация событий), является protected и доступен только наследникам OservableObject.  
-Планируется, что классы представлений, публикующие соственные события, будут наследовать от него (показано ниже на примере ProductCardView).
-Наследники `OservableObject` (View) реализую шаблон наблюдатель, где издателем являются представления публикующие собственные события, а подписчиком является презентер, эти события обрабатывающий. Наблюдаемые обьекты очень широко используются в js приложениях (примеры: экземпляры stream, response в node.js, обьекты DOM и т.д.). 
+В проекте используется класс [OservableObject](src/components/base/observable-object.ts). Реализующий интерфейс `Observable`.
+Данный клас является оберткой над EventEmitter скрывающим все методы, кроме метода подписки(on) от клиентов класса, метод _emit(публикация событий) является protected и доступен только наследникам OservableObject.  
+Классы представлений, публикующие собственные события, наследуют от OservableObject.
+Наследники `OservableObject` (View) реализую шаблон наблюдатель, где издателем являются представления публикующие собственные события, а подписчиком является презентер, эти события обрабатывающий.
 
-Шаблоны обмена соообщениями такие как `MessageBus` в проекте не применяются.
-``` typescript
-/**
- * Базовый класс наблюдаемого объекта, которые эмитят события и предоставляют метод для подписки на них.
- *
- * @template EventMap Тип-отображения имён событий на публикуемые данные
- */
-class ObservableObject<EventMap extends Record<string, unknown>> implements Observable<EventMap> {
-    #emitter = new EventEmitter<EventMap>();
+Архитектура проекта основана на паттерне MVP (Model-View-Presenter).
 
-    /**
-     * Добавляет обработчик события
-     */
-    on<E extends keyof EventMap>(eventName: E | E[], handler: EventHandler<EventMap, E>) {...}
-
-    /** Публикует событие */
-    protected _emit<EventName extends keyof EventMap>(eventName: EventName, payload: EventMap[EventName]) {...}
-}
-```
-
-```typescript
-type EventHandler<T extends object, K extends keyof T = keyof T>
-    = (payload: T[K]) => void;
-
-type AnyEventHandler<T extends object> = (event: keyof T, payload: T[keyof T]) => void;
-
-// Базовый класс для реализации паттерна "Издатель-Подписчик", MessageMap - типовая карта событий
-class EventEmitter<MessageMap extends object> {
-    /** Публикует событие */
-    emit<T extends keyof MessageMap>(eventName: T, payload: MessageMap[T]) { /* ... */ }
-
-    /** Добавляет обработчик события */
-    on<T extends keyof MessageMap>(eventName: T | T[], handler: EventHandler<MessageMap, T>) { /* ... */ }
-
-    /** Снимает обработчик события */
-    off<T extends keyof MessageMap>(eventName: T, handler: EventHandler<MessageMap, T>) { /* ... */ }
-
-    /** Добавляет обработчик любого события */
-    onAll(handler: AnyEventHandler<MessageMap>) { /* ... */ }
-
-    /** Cбрасывает все обработчики */
-    reset() { /* ... */ }
-}
-```
-Архитектура проекта основана на паттерне MVP (Model-View-Presenter). Экземпляры представлений
-
-### Описание паттерна MVP, основных его элементов и их обязанностей и особенностей реализации в проекте (т.к. шаблон понимают  по разному, считю нужным добавить как его понимает автор проекта).
+### Описание паттерна MVP, основных его элементов и их обязанностей и особенностей реализации в проекте 
 
 Шаблон проектирования MVP (Model-View-Presenter) 
 **Общее назначение**
@@ -169,7 +140,6 @@ MVP — архитектурный шаблон, который разделяе
 Назначение: Слой данных и бизнес-логики
 Задачи: Инкапсуляция логики работы с данными (получение, хранение, обработка), работа с источниками данных (например API)
 Оповещение об изменениях данных (в данном проекте через механизм публикации событий).
-NOTE: логика работы с API перенесена из модели в презентер по категорическому требованию ревьюверов (данный комментарий добавлен т.к. нет другой возможности ответить на замечания).
 
 2. View (Представление)
 Назначение: Отображение данных и взаимодействие с пользователем
@@ -177,8 +147,6 @@ NOTE: логика работы с API перенесена из модели в
 
 3. Presenter (Посредник)
 Назначение: посредник между Model и View
-NOTE: логика работы с API перенесена из модели в презентер по категорическому требованию ревьюверов (данный комментарий добавлен т.к. нет другой возможности ответить на замечания).
-
 Задачи: Обработка пользовательских действий от View (через механизм назначения обработчиков), вызов соответствующих методов Model,
 управляет представлениями (например вызывает соответствующие методы отрисовки данных при получении событий от модели), 
 
@@ -193,7 +161,7 @@ new SomeView ({
   ...
 });
 ```
- - назначение через специпльный метод, пример:
+ - назначение через специальный метод, пример:
 ```typescript
 init() { // Presenter
   const handleButtonClick = (productId: Product) => {...};
@@ -201,8 +169,8 @@ init() { // Presenter
 }
 ```
 При правильной типизации, оба подхода обеспечиват типобезопасность кода.
-В проекти используется второй подход. Обоснование выбора второго варианта:
-При использовании первого вырианта, экземпляры предствалений создаются внутри презентера, пример
+В проекте используется второй подход. Обоснование выбора второго варианта:
+При использовании первого варианта, экземпляры предствалений создаются внутри презентера, пример
 ```typescript
 constructor(...) { // Presernter
   this.#someView = new SomeView({
@@ -231,7 +199,7 @@ const presenter = new Presenter({ someView });
 Устранение проблемной зависимости позволяет легко тестировать логику презентера внедряя тестовые дублеры представлений. Кроме того, 
 это позволяет компактно и очень лаконично описывать логику назначения обработчиков а методе init презентера, что облегчает понимание кода.
 Данный проект почти не требует динамического создания DOM елементов (исключение - карточки товара каталога), поэтому большинство представлений будут просто запрашивать элементы дом из документа document/main-element в конструкторе (или принимать в параметрах конструктора).
-В качестве иллюстрации можно посмотреть код CatalogPresenter из данного проекта снабенный пояснениями:
+В качестве иллюстрации можно посмотреть код CatalogPresenter из данного проекта с пояснениями:
 [CatalogPresenter](src/components/presenters/catalog.presenter.ts)
 
 
@@ -249,6 +217,20 @@ User clicks "Купить" button
 ```
 
 Во избежание путаницы отмечу, что не следует путать браузерные события (например button 'click') и события представлений (например 'BUTTON-CLICK:BUY').
+
+### Список событий приложения
+- `CatalogModel` — `PRODUCTS:LOADED` : `{ products: Product[] }`
+- `CatalogView` — `PRODUCT:SELECTED` : `{ productId: ProductId }`
+- `ProductModalView` — `BUTTON-CLICK:BUY` : `{ product: Product }`
+- `CartModel` — `CART:UPDATED` : `{ products: Product[] }`
+- `CartModel` — `TOTAL-PRICE:UPDATED` : `{ totalPrice: number }` (описан в типах)
+- `CartView` — `BUTTON-CLICK:REMOVE-PRODUCT` : `{ productId: ProductId }`
+- `CartView` — `BUTTON-CLICK:ORDER-CREATE` : `undefined`
+- `HeaderView` — `BASKET:OPEN` : `null`
+- `OrderDetailsView` — `FORM-SUBMIT` : `OrderDetails`
+- `ContactsView` — `FORM-SUBMIT` : `Contacts`
+- `OrderCreationResultView` — `ORDER-CREATION-RESULT:CLOSED` : `undefined`
+
 
 ### Краткое описание архитектуры проекта:
 Используется один презентер: 
@@ -317,8 +299,63 @@ User clicks "Купить" button
 В проекте используется два минималистичных интерфейса api:
 - ['OrderApi'](src/types/api/order.api.ts)
 - ['ProductApi'](src/types/api/product.api.ts)
-- 
-Методы api не пробрасывают исключений, ошибки возвращаются в явном виде в поле результата `error`
+
+Методы api не пробрасывают исключений, ошибки возвращаются в явном виде в поле результата `error`.
+
+### API: Endpoints and responses
+
+Краткая сводка эндпойнтов и форматов ответов, используемых в приложении:
+
+- GET /product
+  - Ответ: `{ total: number, items: Product[] }`
+  - Используется в `ProductApi.getAll()` и затем в `CatalogModel.loadProducts()`.
+
+- GET /product/:id
+  - Ответ: `Product` или ошибка. Используется в `ProductApi.getProductById()` и в `CatalogModel.loadProductById()`.
+
+- POST /order
+  - Тело запроса: `OrderParams` (объединение `OrderDetails`, `Contacts`, `OrderItems`)
+  - Ответ: `OrderCreationResponse` (`{ id: string, total: number }`) или ошибка.
+
+Примеры типов (см. `src/types/`): `Product`, `OrderParams`, `OrderCreationResponse`.
+
+> Примечание: API-слой (`ProductApi`, `OrderApi`) возвращает объект вида `{ error, ... }`. Это даёт возможность обрабатывать ошибки без проброса исключений.
+
+### Public view methods (signatures)
+
+Ниже — короткая таблица основных представлений и их публичных методов/сигнатур.
+
+- `CatalogView`
+  - `render(products: Product[]): void`
+  - `on(event: 'PRODUCT:SELECTED', handler: ({ productId: string }) => void): void`
+
+- `ProductModalView` (корневое модальное представление товара)
+  - `render(product: Product): void`
+  - `on(event: 'BUTTON-CLICK:BUY', handler: ({ product: Product }) => void): void`
+  - `setButtonDisabledState(disabled: boolean): void`
+
+- `CartView`
+  - `render(products: Product[]): void`
+  - `on(event: 'BUTTON-CLICK:REMOVE-PRODUCT', handler: ({ productId: string }) => void): void`
+  - `on(event: 'BUTTON-CLICK:ORDER-CREATE', handler: () => void): void`
+
+- `OrderDetailsView`
+  - `render(details: OrderDetails): void`
+  - `on(event: 'FORM-SUBMIT', handler: (details: OrderDetails) => void): void`
+  - `setOrderButtonDisabledState(disabled: boolean): void`
+
+- `ContactsView`
+  - `render(contacts: Contacts): void`
+  - `on(event: 'FORM-SUBMIT', handler: (contacts: Contacts) => void): void`
+  - `hide(): void`
+
+- `OrderCreationResultView`
+  - `render(total: number): void`
+
+- `ModalBrowserView` (базовое модальное)
+  - `show(): void`, `hide(): void`, `setContent(...elements: HTMLElement[]): void`
+
+Эти сигнатуры соответствуют интерфейсам в `src/types/views` и реализациим в `src/components/views`.
 
 ### Подробные описания типов представлений
 
@@ -348,14 +385,14 @@ User clicks "Купить" button
 
 Класс OrderDetailsView  
 Задача: Отображает модальное окно с формой для ввода деталей заказа (адрес, способ оплаты).  
-События: 'FORM_SUBMIT', данные события `OrderDetails`;
+События: 'FORM-SUBMIT', данные события `OrderDetails`;
 Методы:  
   render - рендерит форму деталей заказа;  
   on - подписка на событие отправки формы.
 
 Класс ContactsView  
 Задача: Отображает модальное окно с формой для ввода контактных данных пользователя.  
-События: 'FORM_SUBMIT', данные события `{email: string, phone: string}`;
+События: 'FORM-SUBMIT', данные события `{email: string, phone: string}`;
 Методы:  
   render - показывает модальное окно с текущими контактными данными;
   hide - закрывает окно с контактными данными;  
@@ -365,16 +402,3 @@ User clicks "Купить" button
 Задача: Отображает результат успешного создания заказа, включая итоговую цену.  
 Методы:
   render - рендерит итоговую цену заказа.
-
-[Ответы на замечания](REVIEW_COMMENTS.md)
-
-## Установка и запуск
-```
-npm install
-npm run start
-```
-## Сборка
-
-```
-npm run build
-```
