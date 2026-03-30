@@ -25,10 +25,16 @@ const config = {
     open: true,
     host: "localhost",
     watchFiles: ["src/pages/*.html"],
-    static: {
-      directory: path.resolve(__dirname, 'src', 'images'),
-      publicPath: '/images',
-    },
+    static: [
+      {
+        directory: path.resolve(__dirname, 'src', 'images'),
+        publicPath: '/images',
+      },
+      {
+        directory: path.resolve(__dirname, 'src', 'public'),
+        publicPath: '/',
+      }
+    ],
     hot: true
   },
   plugins: [
@@ -40,7 +46,8 @@ const config = {
 
     new CopyPlugin({
       patterns: [
-        { from: path.resolve(__dirname, 'src', 'images'), to: path.resolve(__dirname, 'dist', 'images') }
+        { from: path.resolve(__dirname, 'src', 'images'), to: path.resolve(__dirname, 'dist', 'images') },
+        { from: path.resolve(__dirname, 'src', 'public'), to: path.resolve(__dirname, 'dist') }
       ]
     }),
 

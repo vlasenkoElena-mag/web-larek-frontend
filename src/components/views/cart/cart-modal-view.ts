@@ -18,22 +18,15 @@ export class CartModalBrowserView implements CartModalView {
         this._cartView.on(event, handler);
     }
 
-    render(products: Product[], showModal = true): void {
+    show(): void {
+        this._modal.show();
+    }
+
+    hide(): void {
+        this._modal.hide();
+    }
+
+    render(products: Product[]): void {
         this._cartView.render(products);
-
-        if (showModal) {
-            this._modal.show();
-        }
-        else {
-            this._modal.hide();
-        }
-    }
-
-    setTotalPrice(totalPrice: number): void {
-        this._cartView.setTotalPrice(totalPrice);
-    }
-
-    setOrderButtonDisabledState(disabled: boolean): void {
-        this._cartView.setOrderButtonDisabledState(disabled);
     }
 }

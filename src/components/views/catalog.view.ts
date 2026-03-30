@@ -16,20 +16,20 @@ export class CatalogBrowserView extends ObservableObject<CatalogViewEvents> impl
         const items: HTMLElement[] = products.map(product => {
             const el = cloneTemplate<HTMLElement>('card-catalog');
 
-            const category = el.querySelector('.card__category') as HTMLElement | null;
-            const title = el.querySelector('.card__title') as HTMLElement | null;
-            const image = el.querySelector('.card__image') as HTMLImageElement | null;
-            const price = el.querySelector('.card__price') as HTMLElement | null;
+            const category = ensureElement('.card__category', el);
+            const title = ensureElement('.card__title', el);
+            const image = ensureElement<HTMLImageElement>('.card__image', el);
+            const price = ensureElement('.card__price', el);
 
-            if (category) category.textContent = product.category;
-            if (title) title.textContent = product.title;
-            if (image) image.src = `/images${product.image}`;
-            if (price) price.textContent = formatPrice(product.price ?? 0);
+            category.textContent = product.category;
+            title.textContent = product.title;
+            image.src = `/images${product.image}`;
+            price.textContent = formatPrice(product.price ?? 0);
 
             el.dataset.productId = product.id;
 
             el.addEventListener('click', () => {
-                this.handleCardClick(product.id);
+                this._handleCardClick(product.id);
             });
 
             return el as HTMLElement;
@@ -38,7 +38,7 @@ export class CatalogBrowserView extends ObservableObject<CatalogViewEvents> impl
         setChildren(this._root, items);
     }
 
-    private handleCardClick(productId: string): void {
+    private _handleCardClick(productId: string): void {
         this._emit('PRODUCT:SELECTED', { productId });
     }
 }

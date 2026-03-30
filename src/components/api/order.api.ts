@@ -1,7 +1,7 @@
 import type { OrderCreationResponse, OrderParams } from '../../types/index.ts';
 import type { CreateOrderResult, OrderApi as IOrderApi } from '../../types/api/order.api';
 import { Api } from '../base/api';
-import { LoadProductsError } from './errors/product-list-loading-error';
+import { CreateOrderError } from './errors/order-creation-error';
 
 export class OrderApi extends Api implements IOrderApi {
     async create(order: OrderParams): Promise<CreateOrderResult> {
@@ -10,7 +10,7 @@ export class OrderApi extends Api implements IOrderApi {
             return { error: null, order: result };
         }
         catch (error) {
-            return { error: new LoadProductsError(error), order: null };
+            return { error: new CreateOrderError(order, error), order: null };
         }
     }
 }

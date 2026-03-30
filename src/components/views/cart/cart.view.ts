@@ -23,38 +23,34 @@ export class CartBrowserView extends ObservableObject<CartViewEvents> implements
     render(products: Product[]): void {
         const items: HTMLElement[] = products.map((product, index) => {
             const el = cloneTemplate<HTMLElement>('card-basket');
-            const title = el.querySelector('.card__title') as HTMLElement | null;
-            const price = el.querySelector('.card__price') as HTMLElement | null;
-            const indexEl = el.querySelector('.basket__item-index') as HTMLElement | null;
-            const deleteBtn = el.querySelector('.basket__item-delete') as HTMLButtonElement | null;
+            const title = ensureElement('.card__title', el);
+            const price = ensureElement('.card__price', el);
+            const indexEl = ensureElement('.basket__item-index', el);
+            const deleteBtn = ensureElement<HTMLButtonElement>('.basket__item-delete', el);
             el.dataset.productId = product.id;
 
-            if (indexEl) indexEl.textContent = String(index + 1);
-            if (title) title.textContent = product.title;
-            if (price) price.textContent = formatPrice(product.price ?? 0);
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', () => {
-                    this._emit('BUTTON-CLICK:REMOVE-PRODUCT', { productId: product.id });
-                });
-            }
+            indexEl.textContent = String(index + 1);
+            title.textContent = product.title;
+            price.textContent = formatPrice(product.price ?? 0);
+
+            deleteBtn.addEventListener('click', () => {
+                this._emit('BUTTON-CLICK:REMOVE-PRODUCT', { productId: product.id });
+            });
+
             return el as HTMLElement;
         });
+
         if (products.length === 0) {
             this._emptyMessageEl.textContent = 'В корзине пока ничего нет...';
         }
         else {
             this._emptyMessageEl.textContent = '';
         }
+
         setChildren(this._root, items);
-        this.setOrderButtonDisabledState(products.length === 0);
-    };
-
-    setOrderButtonDisabledState(disabled: boolean): void {
-        this._orderButton.disabled = disabled;
-    }
-
-    setTotalPrice(totalPrice: number): void {
+        const totalPrice = products.reduce((sum, p) => sum + (p.price ?? 0), 0);
         const totalPriceEl = ensureElement('.basket__price') as HTMLElement;
         totalPriceEl.textContent = `${formatPrice(totalPrice)}`;
-    }
+        this._orderButton.disabled = products.length === 0;
+    };
 }

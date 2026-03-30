@@ -1,4 +1,4 @@
-import { CustomerInfo, OrderParams } from '../../../types';
+import type { CustomerInfo } from '../../../types';
 
 export class InvalidCustomerInfoError extends Error {
     constructor(params: CustomerInfo) {

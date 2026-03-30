@@ -8,7 +8,6 @@ export class ProductApi extends Api implements IProductApi {
     async getAll(): Promise<LoadProductResult> {
         try {
             const res = await this.get('/product') as { total: number; items: Product[] };
-            console.log('products: ', res);
             return { error: null, products: { total: res.total, items: res.items } };
         }
         catch (error) {

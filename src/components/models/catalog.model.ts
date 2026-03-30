@@ -7,14 +7,12 @@ import { ObservableObject } from '../base/observable-object';
 
 export class CatalogModel extends ObservableObject<ProductsModelEvents> implements ProductsModel {
     private _products: Map<ProductId, Product>;
-    private _selectedProduct: Product | null;
     api: ProductApi;
 
     constructor(api: ProductApi) {
         super();
         this.api = api;
         this._products = new Map();
-        this._selectedProduct = null;
     }
 
     /**
@@ -24,11 +22,10 @@ export class CatalogModel extends ObservableObject<ProductsModelEvents> implemen
      * @returns {GetProductListResult} Объект с полем `products` при успехе или `error` при ошибке.
      * @throws {ProductNotFoundError} Выбрасывается если один или несколько товаров не найдены.
      */
-
     public async loadProducts(): Promise<void> {
         const { products, error } = await this.api.getAll();
+
         if (error === null && products !== null) {
-            console.log('products: ', products);
             (products.items || []).forEach(product => this._products.set(product.id, product));
             this._emit('PRODUCTS:LOADED', { products: Array.from(this._products.values()) });
         }
@@ -45,15 +42,15 @@ export class CatalogModel extends ObservableObject<ProductsModelEvents> implemen
 
     public async loadProductById(id: string): Promise<Product> {
         const { product, error } = await this.api.getProductById(id);
+
         if (isNil(product)) {
             throw new ProductNotFoundError(id);
         }
-        if (error === null) {
-            this._selectedProduct = product;
-        }
-        else {
+
+        if (error !== null) {
             console.error(error);
         }
+
         return product;
     }
 }

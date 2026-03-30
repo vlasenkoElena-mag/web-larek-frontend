@@ -9,14 +9,13 @@ import { ObservableObject } from '../base/observable-object';
  */
 export class CartModel extends ObservableObject<CartModelEvents> implements ICartModel {
     private _products: Product[] = [];
-    private _totalPrice = 0;
 
     get products(): Product[] {
         return structuredClone(this._products);
     }
 
     get totalPrice(): number {
-        return this._totalPrice;
+        return this.products.reduce((sum, product) => sum + (product.price ?? 0), 0);
     }
 
     public has(productId: ProductId): boolean {
@@ -35,15 +34,14 @@ export class CartModel extends ObservableObject<CartModelEvents> implements ICar
         if (isAlreadyInCart) {
             return;
         }
+
         this._products.push(product);
-        this.setTotalPrice();
         this._emit('CART:UPDATED', { products: this.products });
     }
 
     /** Удаляет товар из корзины */
     public removeProduct(productId: ProductId): void {
         this._products = this._products.filter(p => p.id !== productId);
-        this.setTotalPrice();
         this._emit('CART:UPDATED', { products: this.products });
     }
 
@@ -52,25 +50,16 @@ export class CartModel extends ObservableObject<CartModelEvents> implements ICar
         if (this._products.length === 0) {
             throw new EmptyCartOrderCreationError();
         }
+
         return {
             items: this._products.map(p => p.id),
-            total: this._totalPrice,
+            total: this.totalPrice,
         };
     }
 
     /** Очищает корзину. */
     public clear(): void {
         this._products = [];
-        this.setTotalPrice();
-        this._emit('CART:UPDATED', { products: this.products });
-    }
-
-    private countTotalPrice(): void {
-        this._totalPrice = this._products.reduce((sum, product) => sum + (product.price ?? 0), 0);
-    }
-
-    public setTotalPrice(): void {
-        this.countTotalPrice();
-        this._emit('TOTAL-PRICE:UPDATED', { totalPrice: this.totalPrice });
+        this._emit('CART:UPDATED', { products: [] });
     }
 }

@@ -10,9 +10,11 @@ export class HeaderBrowserView extends ObservableObject<HeaderViewEvents> {
     constructor() {
         super();
         this._button = ensureElement('.header__basket') as HTMLButtonElement;
+
         this._button.addEventListener('click', () => {
             this._emit('BASKET:OPEN', null);
         });
+
         const counterElement = ensureElement('.header__basket-counter', this._button);
         this._buttonCounterElement = counterElement as HTMLElement;
         this._buttonCounterElement.textContent = '0';
