@@ -9,10 +9,13 @@ type Params = {
 
 export class ContactsFormBrowserView extends ObservableObject<ContactsViewEvents> implements ContactsFormView {
     private _form: HTMLFormElement;
-    private _addressIsValid = false;
-    private _paymentMethodIsValid = false;
+    private _emailIsValid = false;
+    private _phoneIsValid = false;
     private _email = '';
     private _phone = '';
+    private _onEmailInput?: (evt: Event) => void;
+    private _onPhoneInput?: (evt: Event) => void;
+    private _onSubmit?: (evt: Event) => void;
 
     constructor({ form }: Params) {
         super();
@@ -20,50 +23,75 @@ export class ContactsFormBrowserView extends ObservableObject<ContactsViewEvents
     }
 
     render(contacts: Contacts): void {
+        this._removeHandlers();
+
         const template = cloneTemplate<HTMLElement>('contacts');
 
         this._form.innerHTML = '';
         Array.from(template.children).forEach(child => this._form.appendChild(child.cloneNode(true)));
         const emailInput = this._form.querySelector('[name="email"]') as HTMLInputElement | null;
         const phoneInput = this._form.querySelector('[name="phone"]') as HTMLInputElement | null;
-        const submitButton = this._form.querySelector('.button') as HTMLButtonElement;
+        const submitButton = this._form.querySelector('.button') as HTMLButtonElement | null;
 
         if (emailInput && typeof contacts.email === 'string') {
             emailInput.value = contacts.email;
             this._email = contacts.email;
         }
+
         if (phoneInput && typeof contacts.phone === 'string') {
             phoneInput.value = contacts.phone;
             this._phone = contacts.phone;
         }
 
-        const isValid = () => {
-            if (this._addressIsValid && this._paymentMethodIsValid) {
-                submitButton.disabled = false;
-            }
-            else {
-                submitButton.disabled = true;
-            }
+        this._onEmailInput = () => {
+            if (!emailInput) return;
+            this._emailIsValid = !!emailInput.value.trim();
+            this._email = emailInput.value.trim();
+            if (submitButton) submitButton.disabled = !(this._emailIsValid && this._phoneIsValid);
         };
 
-        emailInput?.addEventListener('input', () => {
-            this._addressIsValid = !!emailInput.value.trim();
-            this._email = emailInput.value.trim();
-            isValid();
-        });
-
-        phoneInput?.addEventListener('input', () => {
-            this._paymentMethodIsValid = !!phoneInput.value.trim();
+        this._onPhoneInput = () => {
+            if (!phoneInput) return;
+            this._phoneIsValid = !!phoneInput.value.trim();
             this._phone = phoneInput.value.trim();
-            isValid();
-        });
+            if (submitButton) submitButton.disabled = !(this._emailIsValid && this._phoneIsValid);
+        };
 
-        this._form.addEventListener('submit', evt => {
+        emailInput?.addEventListener('input', this._onEmailInput);
+        phoneInput?.addEventListener('input', this._onPhoneInput);
+
+        this._emailIsValid = !!emailInput?.value.trim();
+        this._phoneIsValid = !!phoneInput?.value.trim();
+        if (submitButton) submitButton.disabled = !(this._emailIsValid && this._phoneIsValid);
+
+        this._onSubmit = (evt: Event) => {
             evt.preventDefault();
             this._emit('FORM-SUBMIT', {
                 email: this._email,
                 phone: this._phone,
             });
-        });
+        };
+        this._form.addEventListener('submit', this._onSubmit);
+    }
+
+    private _removeHandlers(): void {
+        const emailInput = this._form.querySelector('[name="email"]') as HTMLInputElement | null;
+        const phoneInput = this._form.querySelector('[name="phone"]') as HTMLInputElement | null;
+        if (emailInput && this._onEmailInput) {
+            emailInput.removeEventListener('input', this._onEmailInput);
+        }
+        if (phoneInput && this._onPhoneInput) {
+            phoneInput.removeEventListener('input', this._onPhoneInput);
+        }
+        if (this._onSubmit) {
+            this._form.removeEventListener('submit', this._onSubmit);
+        }
+        this._onEmailInput = undefined;
+        this._onPhoneInput = undefined;
+        this._onSubmit = undefined;
+    }
+
+    destroy(): void {
+        this._removeHandlers();
     }
 }
