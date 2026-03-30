@@ -12,7 +12,6 @@ export class OrderCreationResultModalBrowserView implements OrderCreationResultM
         const contentOfSuccessModalRoot = modalRoot.querySelector('.order-success') as HTMLElement;
         this._modal = new ModalBrowserView({ rootElement: modalRoot });
         this._contentOfSuccessModalRoot = new OrderCreationResultBrowserView({ contentOfSuccessModalRoot });
-        // Закрываем модал при событии из контента результата создания заказа.
         this._contentOfSuccessModalRoot.on('ORDER-CREATION-RESULT:CLOSED', () => {
             this._modal.hide();
         });
