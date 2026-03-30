@@ -35,4 +35,7 @@ export type CartModel = Observable<CartModelEvents> & {
 
     /** Общая сумма корзины */
     totalPrice: number;
+
+    /** Очищает корзину. */
+    clear(): void;
 };

@@ -50,6 +50,14 @@ export class CustomerModel {
         this._phone = phone;
     }
 
+    /** Очищает все данные покупателя. */
+    public clear(): void {
+        this._email = '';
+        this._phone = '';
+        this._address = '';
+        this._payment = '';
+    }
+
     /** проверяет валидность данных покупателя. */
     private _validate(customerInfo: CustomerInfo): void {
         const { email, phone, address, payment } = customerInfo;
