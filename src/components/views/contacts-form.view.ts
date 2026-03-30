@@ -45,24 +45,58 @@ export class ContactsFormBrowserView extends ObservableObject<ContactsViewEvents
 
         this._onEmailInput = () => {
             if (!emailInput) return;
-            this._emailIsValid = !!emailInput.value.trim();
             this._email = emailInput.value.trim();
-            if (submitButton) submitButton.disabled = !(this._emailIsValid && this._phoneIsValid);
+            this._emailIsValid = !!emailInput.value.trim() && emailInput.checkValidity();
+            renderErrors();
+            if (submitButton) {
+                submitButton.disabled = !(this._emailIsValid && this._phoneIsValid);
+            }
         };
 
         this._onPhoneInput = () => {
             if (!phoneInput) return;
-            this._phoneIsValid = !!phoneInput.value.trim();
             this._phone = phoneInput.value.trim();
-            if (submitButton) submitButton.disabled = !(this._emailIsValid && this._phoneIsValid);
+            this._phoneIsValid = !!phoneInput.value.trim() && phoneInput.checkValidity();
+            renderErrors();
+            if (submitButton) {
+                submitButton.disabled = !(this._emailIsValid && this._phoneIsValid);
+            }
         };
 
         emailInput?.addEventListener('input', this._onEmailInput);
         phoneInput?.addEventListener('input', this._onPhoneInput);
 
-        this._emailIsValid = !!emailInput?.value.trim();
-        this._phoneIsValid = !!phoneInput?.value.trim();
+        this._emailIsValid = !!(emailInput && emailInput.value.trim() && emailInput.checkValidity());
+        this._phoneIsValid = !!(phoneInput && phoneInput.value.trim() && phoneInput.checkValidity());
         if (submitButton) submitButton.disabled = !(this._emailIsValid && this._phoneIsValid);
+
+        const formErrors = this._form.querySelector('.form__errors') as HTMLElement | null;
+
+        const renderErrors = () => {
+            if (!formErrors) return;
+            const errors: string[] = [];
+
+            if (emailInput) {
+                if (emailInput.value.trim() && !emailInput.checkValidity()) {
+                    if (emailInput.validity.typeMismatch) {
+                        errors.push('Введите корректный Email');
+                    }
+                }
+            }
+
+            if (phoneInput) {
+                if (phoneInput.value.trim() && !phoneInput.checkValidity()) {
+                    if (phoneInput.validity.patternMismatch) {
+                        errors.push('Телефон должен быть в формате +7XXXXXXXXXX или 8XXXXXXXXXX');
+                    }
+                }
+            }
+
+            formErrors.style.whiteSpace = 'pre-wrap';
+            formErrors.textContent = errors.join('\n');
+        };
+
+        renderErrors();
 
         this._onSubmit = (evt: Event) => {
             evt.preventDefault();
