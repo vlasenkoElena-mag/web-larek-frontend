@@ -54,6 +54,13 @@ export class ModalBrowserView {
             this.hide();
         });
 
+        // Закрывать модал при клике по оверлею (клик вне контейнера модального окна)
+        this._rootElement.addEventListener('click', (evt: MouseEvent) => {
+            if (evt.target === this._rootElement) {
+                this.hide();
+            }
+        });
+
         ModalBrowserView._instances.push(this);
     }
 
