@@ -3,6 +3,7 @@ import { ensureElement } from '../../../utils/utils';
 import { formatPrice } from '../../../utils/simple-utils';
 import { ObservableObject } from '../../base/observable-object';
 import type { ProductModalViewEvents, ProductCardView } from '../../../types/views/product.view';
+import { categoryMap } from '../../../utils/constants';
 
 /** Параметры для создания представления продукта. */
 export type ProductViewParams = {
@@ -100,6 +101,7 @@ export class ProductCardBrowserView extends ObservableObject<ProductModalViewEve
         this._titleElement.textContent = title;
         this._descriptionElement.textContent = description;
         this._imageElement.src = `/images${image}`;
+        this._categoryElement.className = `card__category card__category_${categoryMap[category]}`;
 
         if (price === null) {
             this._buyButtonElement.disabled = true;

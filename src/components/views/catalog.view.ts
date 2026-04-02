@@ -3,6 +3,7 @@ import type { Product } from '../../types';
 import { ObservableObject } from '../base/observable-object';
 import { ensureElement, cloneTemplate, setChildren } from '../../utils/utils';
 import { formatPrice } from '../../utils/simple-utils';
+import { categoryMap } from '../../utils/constants';
 
 export class CatalogBrowserView extends ObservableObject<CatalogViewEvents> implements CatalogView {
     private _root: HTMLElement;
@@ -22,6 +23,7 @@ export class CatalogBrowserView extends ObservableObject<CatalogViewEvents> impl
             const price = ensureElement('.card__price', el);
 
             category.textContent = product.category;
+            category.className = `card__category card__category_${categoryMap[product.category] || 'other'}`;
             title.textContent = product.title;
             image.src = `/images${product.image}`;
             price.textContent = formatPrice(product.price ?? 0);
