@@ -1,5 +1,6 @@
-import type { Contacts, Renderer } from '..';
+import type { Contacts } from '..';
 import type { FormView, FormViewEvents } from './base/form.view';
+import type { ModalView } from './base/modal.view';
 
 /** Представление для редактирования контактных данных (`Contacts`). */
 
@@ -12,6 +13,6 @@ export type ContactsViewEvents = FormViewEvents<Contacts>;
  * Представление модального окна с формой редактирования контактных данных (`Contacts`).
  */
 
-export type ContactsFormView = FormView<Contacts> & Renderer<Contacts>;
+export type ContactsFormView = FormView<Contacts>;
 
-export type ContactsModalView = ContactsFormView;
+export type ContactsModalView = ContactsFormView & Pick<ModalView, 'show'>;

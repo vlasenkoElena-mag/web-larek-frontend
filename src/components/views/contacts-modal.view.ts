@@ -1,5 +1,4 @@
-import type { Contacts } from '../../types';
-import type { ContactsModalView } from '../../types/views/contacts.view';
+import type { ContactsModalView, ContactsViewEvents } from '../../types/views/contacts.view';
 import { ModalBrowserView } from './common/modal.view';
 import { ContactsFormBrowserView } from './contacts-form.view';
 
@@ -14,12 +13,11 @@ export class ContactsModalBrowserView implements ContactsModalView {
         this._form = new ContactsFormBrowserView({ form });
     }
 
-    on(...params: Parameters<ContactsFormBrowserView['on']>): void {
-        this._form.on(...params);
+    on<E extends keyof ContactsViewEvents>(event: E, handler: (payload: ContactsViewEvents[E]) => void): void {
+        this._form.on(event, handler);
     }
 
-    render(contacts: Contacts): void {
-        this._form.render(contacts);
+    show(): void {
         this._modal.show();
     }
 }

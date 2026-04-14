@@ -1,5 +1,4 @@
-import type { OrderDetails } from '../../types';
-import type { OrderDetailsModalView } from '../../types/views/order-details.view';
+import type { OrderDetailsModalView, OrderDetailsViewEvents as Events } from '../../types/views/order-details.view';
 import { ModalBrowserView } from './common/modal.view';
 import { OrderDetailsFormBrowserView } from './order-details-form.view';
 
@@ -14,12 +13,11 @@ export class OrderDetailsModalBrowserView implements OrderDetailsModalView {
         this._form = new OrderDetailsFormBrowserView({ form });
     }
 
-    on(...params: Parameters<OrderDetailsFormBrowserView['on']>): void {
-        this._form.on(...params);
+    on<E extends keyof Events>(event: E, handler: (payload: Events[E]) => void): void {
+        this._form.on(event, handler);
     }
 
-    render(orderDetails: OrderDetails): void {
-        this._form.render(orderDetails);
+    show(): void {
         this._modal.show();
     }
 
