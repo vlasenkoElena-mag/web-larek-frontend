@@ -8,7 +8,7 @@
   &__item {
     border: none;
     border-radius: $defaultBorderRadius;
-    @include mixins.selectable($secondary, 2px, $primaryLight);
+    @include mixins.selectable($secondary, 2px, $primaryLight, $primary);
 
     &::after {
       border-radius: 0.8rem;
