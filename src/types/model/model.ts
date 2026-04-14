@@ -5,6 +5,7 @@ export type ProductsModelEvents = {
     /** публикуется при загрузке всех продуктов каталога */
     ['PRODUCTS:LOADED']: { products: Product[] };
     ['PRODUCT:SELECTED']: { product: Product };
+    ['PREVIEW:UPDATED']: { preview: Product };
 };
 
 /** Тип модели продуктов. */

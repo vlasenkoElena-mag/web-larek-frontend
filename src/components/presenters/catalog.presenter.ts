@@ -46,7 +46,7 @@ export class CatalogPresenter {
     private _customerModel: CustomerModel;
     private _catalogView: CatalogView;
     private _productView: ProductCardView;
-    private _orderDetailView: OrderDetailsModalView;
+    private _orderDetailsView: OrderDetailsModalView;
     private _contactsView: ContactsModalView;
     private _cartView: CartModalView;
     private _orderCreationResultView: OrderCreationResultModalView;
@@ -74,7 +74,7 @@ export class CatalogPresenter {
 
         this._catalogView = catalogView;
         this._productView = productModalView;
-        this._orderDetailView = orderDetailsView;
+        this._orderDetailsView = orderDetailsView;
         this._contactsView = contactsView;
         this._cartView = cartView;
         this._cartModel = cartModel;
@@ -98,17 +98,15 @@ export class CatalogPresenter {
 
         this._catalogView.on(
             'PRODUCT:SELECTED',
-            ({ productId }) => {
-                this._catalogModel.loadProductById(productId)
-                    .then(product => {
-                        this._productView.render(product);
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-                this._productView.setButtonDisabledState(this._cartModel.has(productId));
+            ({ product }) => {
+                this._catalogModel.setPreview(product);
+                this._productView.setButtonDisabledState(this._cartModel.has(product.id));
             },
         );
+
+        this._catalogModel.on('PREVIEW:UPDATED', ({ preview }) => {
+            this._productView.render(preview);
+        });
 
         this._headerView.on('BASKET:OPEN', () => {
             this._cartView.render(this._cartModel.products || []);
@@ -127,7 +125,7 @@ export class CatalogPresenter {
 
         this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
             this._cartView.hide();
-            this._orderDetailView.render(this._customerModel.orderDetails);
+            this._orderDetailsView.show();
         });
 
         this._cartModel.on('CART:UPDATED', ({ products }) => {
@@ -135,21 +133,30 @@ export class CatalogPresenter {
             this._cartView.render(products || []);
         });
 
-        this._orderDetailView.on('FORM-SUBMIT', orderDetails => {
-            this._customerModel.setOrderDetails(orderDetails);
-            this._contactsView.render(this._customerModel.contacts);
+        this._orderDetailsView.on('FORM-CHANGED', ({ data, isValid }) => {
+            if (isValid) {
+                this._customerModel.setOrderDetails(data);
+                this._orderDetailsView.setOrderButtonDisabledState(!isValid);
+            }
         });
 
-        this._contactsView.on('FORM-SUBMIT', async contacts => {
-            this._customerModel.setContacts(contacts);
+        this._orderDetailsView.on('FORM-SUBMIT', () => {
+            this._contactsView.show();
+        });
+
+        this._contactsView.on('FORM-CHANGED', ({ data, isValid }) => {
+            if (isValid) this._customerModel.setContacts(data);
+        });
+
+        this._contactsView.on('FORM-SUBMIT', async () => {
             const { error, order } = await this._createOrder();
 
             if (error) {
                 throw error;
             }
 
-            this._cartModel.clear();
             this._orderCreationResultView.render(order.total);
+            this._cartModel.clear();
             this._customerModel.clear();
         });
     }

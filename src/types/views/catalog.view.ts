@@ -1,9 +1,9 @@
-import type { ProductId, Observable, Product, Renderer } from '../index.ts';
+import type { Observable, Product, Renderer } from '../index.ts';
 
 /** События представления каталога. */
 export type CatalogViewEvents = {
     /** публикуется при выборе пользователем товара из каталога */
-    ['PRODUCT:SELECTED']: { productId: ProductId };
+    ['PRODUCT:SELECTED']: { product: Product };
 };
 
 /** Тип представления каталога товаров. */

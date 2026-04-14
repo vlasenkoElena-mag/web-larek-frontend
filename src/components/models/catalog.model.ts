@@ -7,6 +7,7 @@ import { ObservableObject } from '../base/observable-object';
 
 export class CatalogModel extends ObservableObject<ProductsModelEvents> implements ProductsModel {
     private _products: Map<ProductId, Product>;
+    private _preview: Product | null = null;
     api: ProductApi;
 
     constructor(api: ProductApi) {
@@ -52,5 +53,10 @@ export class CatalogModel extends ObservableObject<ProductsModelEvents> implemen
         }
 
         return product;
+    }
+
+    public setPreview(preview: Product): void {
+        this._preview = preview;
+        this._emit('PREVIEW:UPDATED', { preview });
     }
 }
