@@ -1,9 +1,6 @@
 /** Уникальный идентификатор товара. */
 export type ProductId = string;
 
-/** Числовое представление цены товара. */
-export type Price = number;
-
 /** Тип способа оплаты (строка, например "card" или "cash"). */
 export type Payment = 'cash' | 'card' | '';
 
@@ -21,7 +18,7 @@ export type Product = {
     title: string;
     /** Категория товара. */
     category: string;
-    /** Цена товара в целых единицах (тип `Price`). */
+    /** Цена товара в целых единицах. */
     price: number | null;
 };
 
@@ -38,12 +35,25 @@ export type OrderDetails = {
     address: string;
 };
 
+export type OrderDetailsErrors = {
+    payment?: string;
+    address?: string;
+};
+
 /** Контактные данные покупателя. */
 export type Contacts = {
     /** Email пользователя. */
     email: string;
     /** Телефон пользователя. */
     phone: string;
+};
+
+/** Контактные данные покупателя. */
+export type ContactsErrors = {
+    /** Email пользователя. */
+    email?: string;
+    /** Телефон пользователя. */
+    phone?: string;
 };
 
 export type OrderItems = {
@@ -59,19 +69,13 @@ export type OrderItems = {
  */
 export type OrderParams = OrderDetails & Contacts & OrderItems;
 
-/** Представление созданного заказа (включая `orderId`). */
-export type Order = OrderParams & { orderId: OrderId };
-
-/** Уникальный идентификатор заказа. */
-export type OrderId = string;
-
 export type CustomerInfo = Contacts & OrderDetails;
 
 /**
  * Базовый интерфейс наблюдаемых ресурсов (например различные экземпляры)
  * для типизации публикуемых событий.
  */
-export type Observable<Events extends Record<string, unknown>> = {
+export type Observable<Events extends object> = {
     on<E extends keyof Events>(event: E, handler: (payload: Events[E]) => void): void;
 };
 

@@ -1,4 +1,4 @@
-import type { OrderItems, Renderer } from '..';
+import type { Observable, OrderItems, Renderer } from '..';
 
 export type OrderCreationResultViewEvents = {
     /** публикуется при клике на кнопку "Закрыть" в окне результата создания заказа */
@@ -6,6 +6,6 @@ export type OrderCreationResultViewEvents = {
 };
 
 /** Тип представления результата создания заказа. */
-export type OrderCreationResultView = Renderer<OrderItems['total']>;
+export type OrderCreationResultView = Renderer<OrderItems['total']> & Observable<OrderCreationResultViewEvents>;
 
-export type OrderCreationResultModalView = OrderCreationResultView;
+export type OrderCreationResultModalView = Renderer<OrderItems['total']>;

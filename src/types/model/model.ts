@@ -1,11 +1,16 @@
-import type { Observable, Product, OrderItems } from '../index.ts';
+import type { Observable, Product, OrderItems, CustomerInfo } from '../index.ts';
 
 /** События модели продуктов. */
 export type ProductsModelEvents = {
     /** публикуется при загрузке всех продуктов каталога */
     ['PRODUCTS:LOADED']: { products: Product[] };
     ['PRODUCT:SELECTED']: { product: Product };
-    ['PREVIEW:UPDATED']: { preview: Product };
+};
+
+/** События модели покупателя. */
+export type CustomerModelEvents = {
+    /** Публикуется при обновлении данных покупателя */
+    ['CUSTOMER:CHANGED']: { customerInfo: CustomerInfo };
 };
 
 /** Тип модели продуктов. */
@@ -15,7 +20,6 @@ export type ProductsModel = Observable<ProductsModelEvents>;
 export type CartModelEvents = {
     /** публикуется при обновлении содержимого корзины */
     ['CART:UPDATED']: { products: Product[] };
-    ['TOTAL-PRICE:UPDATED']: { totalPrice: number };
 };
 
 export type CartModel = Observable<CartModelEvents> & {

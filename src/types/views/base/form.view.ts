@@ -9,12 +9,13 @@ export const FORM_CHANGED = 'FORM-CHANGED';
 /**
  * Карта событий формы: при submit публикуется полезная нагрузка с данными формы.
  */
-export type FormViewEvents<T extends object> = {
+export type FormViewEvents<T extends object = object> = {
     [FORM_SUBMIT]: T;
-    [FORM_CHANGED]: { data: T } & { isValid: boolean };
+    [FORM_CHANGED]: { data: T };
 };
 
 /**
  * Тип представления формы, представляющий `Observable` событий отправки формы.
  */
 export type FormView<T extends object> = Observable<FormViewEvents<T>>;
+export type TFormData<T> = T extends FormView<infer U> ? U : never;
