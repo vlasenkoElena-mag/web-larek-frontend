@@ -1,53 +1,45 @@
-import type { OrderDetails, Contacts, CustomerInfo, Payment } from '../../types';
-import { InvalidCustomerInfoError } from '../api/errors/invalid-customer-info-error';
+import type { ContactsErrors, CustomerInfo, OrderDetailsErrors, Payment } from '../../types';
+import type { CustomerModelEvents } from '../../types/model/model';
+import { ObservableObject } from '../base/observable-object';
 
 /**
  * Модель покупателя.
  */
-export class CustomerModel {
+export class CustomerModel extends ObservableObject<CustomerModelEvents> {
     private _email = '';
     private _phone = '';
     private _address = '';
     private _payment: Payment = '';
 
-    get contacts(): Contacts {
+    /** Возвращает текущее состояние данных покупателя. */
+    getCustomerInfo(): CustomerInfo {
         return {
             email: this._email,
             phone: this._phone,
-        };
-    }
-
-    get orderDetails(): OrderDetails {
-        return {
             address: this._address,
             payment: this._payment,
         };
     }
 
-    /** Возвращает копию деталей заказа если все данные валидны, иначе пробрасывает ошибку. */
-    getValidCustomerInfo(): CustomerInfo {
-        const info: CustomerInfo = {
-            email: this._email,
-            phone: this._phone,
-            address: this._address,
-            payment: this._payment,
-        };
+    /** Обновляет текущие данные покупателя и публикует событие изменения. */
+    public setData(data: Partial<CustomerInfo>): void {
+        if (data.payment !== undefined) {
+            this._payment = data.payment;
+        }
 
-        this._validate(info);
+        if (data.email !== undefined) {
+            this._email = data.email;
+        }
 
-        return info;
-    }
+        if (data.phone !== undefined) {
+            this._phone = data.phone;
+        }
 
-    /** Устанавливает детали заказа адрес и способ оплаты выбранные покупателей. */
-    public setOrderDetails({ address, payment }: OrderDetails) {
-        this._address = address;
-        this._payment = payment;
-    }
+        if (data.address !== undefined) {
+            this._address = data.address;
+        }
 
-    /** Устанавливает контактные данные покупателя. */
-    public setContacts({ email, phone }: Contacts) {
-        this._email = email;
-        this._phone = phone;
+        this._emit('CUSTOMER:CHANGED', { customerInfo: this.getCustomerInfo() });
     }
 
     /** Очищает все данные покупателя. */
@@ -56,14 +48,29 @@ export class CustomerModel {
         this._phone = '';
         this._address = '';
         this._payment = '';
+        this._emit('CUSTOMER:CHANGED', { customerInfo: this.getCustomerInfo() });
     }
 
-    /** проверяет валидность данных покупателя. */
-    private _validate(customerInfo: CustomerInfo): void {
-        const { email, phone, address, payment } = customerInfo;
+    /** Проверяет валидность данных покупателя и возвращает объект ошибок. */
+    public validate(): ContactsErrors & OrderDetailsErrors {
+        const errors: ContactsErrors & OrderDetailsErrors = {};
 
-        if (!email || !phone || !address || !payment) {
-            throw new InvalidCustomerInfoError(customerInfo);
+        if (!this._payment) {
+            errors.payment = 'Не выбран вид оплаты';
         }
+
+        if (!this._email) {
+            errors.email = 'Укажите email';
+        }
+
+        if (!this._phone) {
+            errors.phone = 'Укажите телефон';
+        }
+
+        if (!this._address) {
+            errors.address = 'Укажите адрес доставки';
+        }
+
+        return errors;
     }
 }
