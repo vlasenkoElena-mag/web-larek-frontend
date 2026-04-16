@@ -37,78 +37,16 @@ npm run build
   - index.ts — общие типы
 - utils/ — утилиты
 - vendor/ — шрифты, иконки и прочее
-- api.yaml — спецификация API
 
 ## Архитектура проекта
 
 В проекте используются базовые типы, определённые в `src/types/index.ts`:
-
-/** Уникальный идентификатор товара. */
-type ProductId = string;
-
-/** Числовое представление цены товара. */
-type Price = number;
-
-/** Тип способа оплаты (строка, например "card" или "cash"). */
-type Payment =  'cash' | 'card' | '';;
-
-/**
- * Описание товара в каталоге.
- */
-type Product = {
-    /** Уникальный идентификатор товара. */
-    id: ProductId;
-    /** Краткое описание товара. */
-    description: string;
-    /** Путь или URL к изображению товара. */
-    image: string;
-    /** Название товара. */
-    title: string;
-    /** Категория товара. */
-    category: string;
-    /** Цена товара в целых единицах (тип `Price`). */
-    price: number | null;
-};
-
-type OrderCreationResponse = {
-    id: string; 
-    total: number;
-}
-
-/** Детали заказа. */
-type OrderDetails = {
-    /** Способ оплаты. */
-    payment: Payment;
-    /** Адрес доставки. */
-    address: string;
-};
-
-/** Контактные данные покупателя. */
-type Contacts = {
-    /** Email пользователя. */
-    email: string;
-    /** Телефон пользователя. */
-    phone: string;
-};
-
-type OrderItems = {
-    /** Общая сумма заказа. */
-    total: number;
-    /** Список идентификаторов товаров в заказе. */
-    items: ProductId[];
-};
 
 /**
  * Параметры заказа, используемые при создании заказа.
  * Объединяет детали заказа, контакты и служебные поля `total` и `items`.
  */
 type OrderParams = OrderDetails & Contacts & OrderItems;
-
-/** Представление созданного заказа (включая `orderId`). */
-type Order = OrderParams & { orderId: OrderId };
-
-/** Уникальный идентификатор заказа. */
-type OrderId = string;
 
 type CustomerInfo = Contacts & OrderDetails;;
 
@@ -124,11 +62,11 @@ type Observable<Events extends Record<string, unknown>> = {
 type Renderer<T> = {
     render(data: T): void;
 };
-```
-В проекте используется класс [OservableObject](src/components/base/observable-object.ts). Реализующий интерфейс `Observable`.
-Данный клас является оберткой над EventEmitter скрывающим все методы, кроме метода подписки(on) от клиентов класса, метод _emit(публикация событий) является protected и доступен только наследникам OservableObject.  
-Классы представлений, публикующие собственные события, наследуют от OservableObject.
-Наследники `OservableObject` (View) реализую шаблон наблюдатель, где издателем являются представления публикующие собственные события, а подписчиком является презентер, эти события обрабатывающий.
+
+В проекте используется класс [ObservableObject](src/components/base/observable-object.ts). Реализующий интерфейс `Observable`.
+Данный класс является обёрткой над `EventEmitter`, скрывающей все методы, кроме метода подписки (`on`) от клиентов класса; метод `_emit` (публикация событий) является `protected` и доступен только наследникам `ObservableObject`.
+Классы представлений, публикующие собственные события, наследуют от `ObservableObject`.
+Наследники `ObservableObject` (View) реализуют шаблон наблюдатель, где издателем являются представления, публикующие собственные события, а подписчиком — презентер, обрабатывающий эти события.
 
 Архитектура проекта основана на паттерне MVP (Model-View-Presenter).
 
@@ -209,13 +147,13 @@ const presenter = new Presenter({ someView });
 ```
 User clicks "Купить" button
     ↓
-Представление модального окна продукта публикует событие 'BUTTON-CLICK:BUY' c данными `{ product: Product }`
+Представление модального окна продукта публикует событие 'BUTTON-CLICK:BUY' c данными `{ productId: string }`
     ↓
 Презентер (CatalogPresenter) слушает событие 'BUTTON-CLICK:BUY' и вызывает метод модели корзины addProduct(product);
     ↓
-После успешного добавления товара в корзину презентер вызывает метод представления setButtonDisabledState
+После успешного добавления товара в корзину презентер вызывает метод представления `setAddToCartButtonState`
     ↓
-Кнопка "Купить" деактиваруется
+Кнопка "Купить" деактивируется
 ```
 
 Во избежание путаницы отмечу, что не следует путать браузерные события (например button 'click') и события представлений (например 'BUTTON-CLICK:BUY').
@@ -223,15 +161,19 @@ User clicks "Купить" button
 ### Список событий приложения
 - `CatalogModel` — `PRODUCTS:LOADED` : `{ products: Product[] }`
 - `CatalogView` — `PRODUCT:SELECTED` : `{ productId: ProductId }`
-- `ProductModalView` — `BUTTON-CLICK:BUY` : `{ product: Product }`
+- `ProductModalView` — `BUTTON-CLICK:BUY` : `{ productId: string }`
 - `CartModel` — `CART:UPDATED` : `{ products: Product[] }`
-- `CartModel` — `TOTAL-PRICE:UPDATED` : `{ totalPrice: number }` (описан в типах)
 - `CartView` — `BUTTON-CLICK:REMOVE-PRODUCT` : `{ productId: ProductId }`
 - `CartView` — `BUTTON-CLICK:ORDER-CREATE` : `undefined`
 - `HeaderView` — `BASKET:OPEN` : `null`
 - `OrderDetailsView` — `FORM-SUBMIT` : `OrderDetails`
 - `ContactsView` — `FORM-SUBMIT` : `Contacts`
 - `OrderCreationResultView` — `ORDER-CREATION-RESULT:CLOSED` : `undefined`
+- `ModalView` — `MODAL:CLOSED` : `undefined` (emitted by modal implementations)
+- `CustomerModel` — `CUSTOMER:CHANGED` : `{ customerInfo: CustomerInfo }`
+- `OrderDetailsView` — `FORM-CHANGED` : `Partial<OrderDetails>` (view publishes form changes)
+- `ContactsView` — `FORM-CHANGED` : `Partial<Contacts>` (view publishes form changes)
+
 
 
 ### Краткое описание архитектуры проекта:
@@ -250,8 +192,8 @@ User clicks "Купить" button
 это комплексное представление, содержащее другие представление и довольно много логики взаимодействия с DOM, но вся эта логика скрыта за очень простым  [интерфейсом](src/types/views/product.view.ts) включающим всего три метода: 
   - on(подписаться на собыия),
   - render(показать данные продукта).
-  - setButtonDisabledState - установить состояние кнопки "Купить"
-Данное представление публикует всего одно событие `BUTTON-CLICK:BUY` c данными `{ product: Product }`. 
+  - setAddToCartButtonState(disabled: boolean) - установить состояние кнопки "Купить"
+Данное представление публикует всего одно событие `BUTTON-CLICK:BUY` c данными `{ productId: string }`. 
 Динамический рендеринг DOM елементов не используется.
 
 Презентер каталога (`CatalogPresenter`) координирует взаимодействие между моделями и представлениями.
@@ -271,9 +213,7 @@ User clicks "Купить" button
 
 Кто слушает (источник события).
 Какое событие (триггер).
-Что происходит в ответ (действие обработчика).
-
-Событие: 'PRODUCT:SELECTED' публикуется представлением каталога при клике пользователя на товар.
+ `ProductModalView` — `BUTTON-CLICK:BUY` : `{ productId: string }`
 Действие: Получается товар по его ID из модели каталога, рендерит данные товара через productView и устанавливает состояние кнопки покупки в зависимости от того, есть ли товар в корзине.
 
 Событие: 'BUTTON-CLICK:BUY' публикуется представлением товара при клике на кнопку покупки.
@@ -287,10 +227,22 @@ User clicks "Купить" button
 
 Событие: 'FORM-SUBMIT' публикуется представлением деталей заказа при сабмите формы.
 Действие: адрес и способ оплаты сохраняются в customerModel; 
+Пример потока данных:
+```
+User clicks "Купить" button
+  ↓
+Представление модального окна продукта публикует событие 'BUTTON-CLICK:BUY' c данными `{ productId: string }`
+  ↓
+Презентер (CatalogPresenter) слушает событие 'BUTTON-CLICK:BUY', получает полную информацию о товаре из `CatalogModel` по `productId`, затем вызывает метод модели корзины `addProduct(product)`;
+  ↓
+После успешного добавления товара в корзину презентер вызывает метод представления `setAddToCartButtonState`
+  ↓
+Кнопка "Купить" деактивируется
+```
 открывается форма контактов и рендерится с текущими контактными данными из модели покупателя.
 
 Событие: 'FORM-SUBMIT' публикуется представлением контактов при сабмите формы.
-Действие: Контактные данные сохраняются в модели покупателя; презентер инициирует создание заказа — вызывает orderApi.create с валидными позициями корзины (cartModel.getValidItems()) и валидной информацией покупателя (customerModel.getValidCustomerInfo()); при успешном создании представление результата рендерит итоговую сумму заказа в представление результата.
+Действие: Контактные данные сохраняются в модели покупателя; презентер инициирует создание заказа — вызывает orderApi.create с валидными позициями корзины (cartModel.getValidItems()) и валидной информацией покупателя (customerModel.getCustomerInfo()); при успешном создании представление результата рендерит итоговую сумму заказа в представление результата.
 
 Эта логика обеспечивает полный цикл основного сценария взаимодействия пользователя с приложением: от просмотра каталога до завершения заказа. Все изменения состояния (в моделях) автоматически отражаются в представлениях, а действия пользователя (в представлениях) обновляют модели.
 
@@ -302,7 +254,7 @@ User clicks "Купить" button
 - ['OrderApi'](src/types/api/order.api.ts)
 - ['ProductApi'](src/types/api/product.api.ts)
 
-Методы api не пробрасывают исключений, ошибки возвращаются в явном виде в поле результата `error`.
+Методы api не пробрасывают исключения, ошибки возвращаются в явном виде в поле результата `error`.
 
 ### API: Endpoints and responses
 
@@ -311,9 +263,6 @@ User clicks "Купить" button
 - GET /product
   - Ответ: `{ total: number, items: Product[] }`
   - Используется в `ProductApi.getAll()` и затем в `CatalogModel.loadProducts()`.
-
-- GET /product/:id
-  - Ответ: `Product` или ошибка. Используется в `ProductApi.getProductById()` и в `CatalogModel.loadProductById()`.
 
 - POST /order
   - Тело запроса: `OrderParams` (объединение `OrderDetails`, `Contacts`, `OrderItems`)
@@ -333,8 +282,8 @@ User clicks "Купить" button
 
 - `ProductModalView` (корневое модальное представление товара)
   - `render(product: Product): void`
-  - `on(event: 'BUTTON-CLICK:BUY', handler: ({ product: Product }) => void): void`
-  - `setButtonDisabledState(disabled: boolean): void`
+  - `on(event: 'BUTTON-CLICK:BUY', handler: ({ productId: string }) => void): void`
+  - `setAddToCartButtonState(disabled: boolean): void`
 
 - `CartView`
   - `render(products: Product[]): void`
@@ -344,20 +293,25 @@ User clicks "Купить" button
 - `OrderDetailsView`
   - `render(details: OrderDetails): void`
   - `on(event: 'FORM-SUBMIT', handler: (details: OrderDetails) => void): void`
-  - `setOrderButtonDisabledState(disabled: boolean): void`
+  - `enableSubmitButton(): void`
+  - `disableSubmitButton(): void`
 
 - `ContactsView`
   - `render(contacts: Contacts): void`
   - `on(event: 'FORM-SUBMIT', handler: (contacts: Contacts) => void): void`
+  - `disableSubmitButton(): void`
+  - `enableSubmitButton(): void`
+  - `renderErrors(errors: string[] | Partial<Record<keyof Contacts, string>>): void`
+  - `resetErrors(): void`
   - `hide(): void`
 
 - `OrderCreationResultView`
   - `render(total: number): void`
 
 - `ModalBrowserView` (базовое модальное)
-  - `show(): void`, `hide(): void`, `setContent(...elements: HTMLElement[]): void`
+  - `show(): void`, `hide(): void`
 
-Эти сигнатуры соответствуют интерфейсам в `src/types/views` и реализациим в `src/components/views`.
+Эти сигнатуры соответствуют интерфейсам в `src/types/views` и реализациям в `src/components/views`.
 
 ### Подробные описания типов представлений
 
@@ -370,11 +324,11 @@ User clicks "Купить" button
 
 Класс ProductModalView  
 Задача: Отображает информацию о выбранном товаре в модальном окне и позволяет добавить товар в корзину.
-События: 'BUTTON-CLICK:BUY', данные события `{ product: Product }`;  
+События: 'BUTTON-CLICK:BUY', данные события `{ productId: string }`;  
 Методы:  
   render - рендерит товар с состоянием кнопки покупки;
   on - подписка на событие нажатия кнопки "купить".
-  setButtonDisabledState - устанавливает состояние кнопки "Купить"
+  setAddToCartButtonState(disabled: boolean) - устанавливает состояние кнопки "Купить"
 
 Класс CartView  
 Задача: Отображает список товаров в корзине, позволяет удалять товары и начинать процесс оформления заказа. 
@@ -391,16 +345,16 @@ User clicks "Купить" button
 Методы:  
   render - рендерит форму деталей заказа;  
   on - подписка на событие отправки формы.
+  enableSubmitButton() - включает кнопку отправки формы
+  disableSubmitButton() - отключает кнопку отправки формы
 
 Класс ContactsView  
 Задача: Отображает модальное окно с формой для ввода контактных данных пользователя.  
 События: 'FORM-SUBMIT', данные события `{email: string, phone: string}`;
 Методы:  
   render - показывает модальное окно с текущими контактными данными;
+  disableSubmitButton() - отключает кнопку отправки формы;
+  enableSubmitButton() - включает кнопку отправки формы;
+  renderErrors(errors: string[]) - отображает ошибки в форме;
+  resetErrors() - сбрасывает отображаемые ошибки;
   hide - закрывает окно с контактными данными;  
-  on - подписка на событие отправки формы.
-
-Класс OrderCreationResultView  
-Задача: Отображает результат успешного создания заказа, включая итоговую цену.  
-Методы:
-  render - рендерит итоговую цену заказа.
