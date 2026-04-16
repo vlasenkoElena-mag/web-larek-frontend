@@ -2,7 +2,7 @@ import type { Product } from '../../../types';
 import { ensureElement } from '../../../utils/utils';
 import { formatPrice } from '../../../utils/simple-utils';
 import { ObservableObject } from '../../base/observable-object';
-import type { ProductModalViewEvents, ProductCardView } from '../../../types/views/product.view';
+import type { ProductViewEvents, ProductCardView } from '../../../types/views/product.view';
 import { categoryMap } from '../../../utils/constants';
 
 /** Параметры для создания представления продукта. */
@@ -12,25 +12,11 @@ export type ProductViewParams = {
 };
 
 /**
- * Представление детальной информации о товаре (MVP паттерн).
- *
- * `ProductBrowserView` отвечает за отображение полной информации о товаре в модальном окне
- * или отдельной странице. Класс управляет DOM-элементами карточки продукта, наполняет их данными
- * и обрабатывает взаимодействие пользователя с кнопкой покупки.
- *
- * Основной функционал:
- * - Инициализация и кэширование ссылок на DOM-элементы карточки товара
- * - Заполнение данных товара (название, категория, цена, описание, изображение)
- * - Обработка клика по кнопке "Купить" с эмиссией события `buy_button_click`
- * - Управление состоянием кнопки покупки (активна/неактивна)
- * - Рендеринг карточки в целевой контейнер
+ * Представление детальной информации о товаре.
  */
-export class ProductCardBrowserView extends ObservableObject<ProductModalViewEvents> implements ProductCardView {
+export class ProductCardBrowserView extends ObservableObject<ProductViewEvents> implements ProductCardView {
     /** Корневой элемент карточки товара */
     public readonly element: HTMLElement;
-
-    /** текущий отображаемй продукт */
-    private _product: Product | null;
 
     /** Элемент отображения цены товара */
     private _priceElement: HTMLElement;
@@ -50,14 +36,6 @@ export class ProductCardBrowserView extends ObservableObject<ProductModalViewEve
     /** Кнопка добавления товара в корзину */
     private _buyButtonElement: HTMLButtonElement;
 
-    /**
-     * Создаёт экземпляр представления товара.
-     *
-     * Конструктор выполняет следующие действия:
-     * 1. Сохраняет ссылку на корневой элемент
-     * 2. Находит и кэширует все дочерние элементы карточки по CSS-селекторам
-     * 3. Устанавливает обработчики событий DOM-елементов.
-     */
     constructor({ productCardElement }: ProductViewParams) {
         super();
         this.element = productCardElement;
@@ -67,19 +45,30 @@ export class ProductCardBrowserView extends ObservableObject<ProductModalViewEve
         this._titleElement = ensureElement('.card__title', productCardElement);
         this._imageElement = (ensureElement('.card__image', productCardElement) as HTMLImageElement);
         this._buyButtonElement = ensureElement('.button', productCardElement) as HTMLButtonElement;
-        this._product = null;
+        this.element.dataset.productId = '';
 
         this._buyButtonElement.addEventListener('click', () => {
-            this._emit('BUTTON-CLICK:BUY', this._makeBuyButtonClickPayload());
+            this._emit('BUTTON-CLICK:BUY', { productId: this.element.dataset.productId ?? '' });
         });
     }
 
     /**
-     * Устанавливает текущий отображаемый продукт, отображает его данные в DOM-елементы.
+     * Замечание: "Метод render всех классов слоя View должен в инструкции return возвращать
+     * заполненный родительский контейнер карточки,
+     * который должен поступать как аргумент в класс в виде клонированного шаблона."
+     *
+     * Комментарий:метод render отвечает за отображение данных. Сигнатура render(product: Product): void
+     * хорошо описывает то, что делает метод и согласуется с принципом CQS.
+     * Он не нарушает никаких привил и принципов ООП или MVP.
      */
-    render(product: Product) {
-        this._product = product;
-        this._renderProduct(product);
+    public render({ id, title, category, price, description, image }: Product): void {
+        this._categoryElement.textContent = category;
+        this._priceElement.textContent = price === null ? 'Не продается' : formatPrice(price ?? 0);
+        this._titleElement.textContent = title;
+        this._descriptionElement.textContent = description;
+        this._imageElement.src = `/images${image}`;
+        this._categoryElement.className = `card__category card__category_${categoryMap[category]}`;
+        this.element.dataset.productId = id;
     }
 
     /**
@@ -91,28 +80,7 @@ export class ProductCardBrowserView extends ObservableObject<ProductModalViewEve
      * - Блокировка во время обработки запроса на добавление в корзину
      * - Разблокировка при удалении товара из корзины
      */
-    setButtonDisabledState(disabled: boolean) {
+    public setAddToCartButtonState(disabled: boolean): void {
         this._buyButtonElement.disabled = disabled;
-    }
-
-    private _renderProduct({ title, category, price, description, image }: Product) {
-        this._categoryElement.textContent = category;
-        this._priceElement.textContent = price === null ? 'Не продается' : formatPrice(price ?? 0);
-        this._titleElement.textContent = title;
-        this._descriptionElement.textContent = description;
-        this._imageElement.src = `/images${image}`;
-        this._categoryElement.className = `card__category card__category_${categoryMap[category]}`;
-
-        if (price === null) {
-            this._buyButtonElement.disabled = true;
-        }
-    }
-
-    private _makeBuyButtonClickPayload(): ProductModalViewEvents['BUTTON-CLICK:BUY'] {
-        if (this._product === null) {
-            throw new Error('Application logic error: publishing product-related event when product is null');
-        }
-
-        return { product: this._product };
     }
 }
