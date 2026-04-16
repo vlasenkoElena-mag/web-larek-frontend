@@ -17,6 +17,7 @@ export class CartModel extends ObservableObject<CartModelEvents> implements ICar
     get totalPrice(): number {
         return this.products.reduce((sum, product) => sum + (product.price ?? 0), 0);
     }
+    /** Проверяет, присутствует ли товар в корзине */
 
     public has(productId: ProductId): boolean {
         return !isNil(this._products.find(p => p.id === productId));

@@ -7,6 +7,7 @@ type Params = {
     contentOfSuccessModalRoot: HTMLElement;
 };
 
+/** Представление результата создания заказа. */
 export class OrderCreationResultBrowserView extends ObservableObject<OrderCreationResultViewEvents> implements OrderCreationResultView {
     private _contentOfSuccessModalRoot: HTMLElement;
 

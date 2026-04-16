@@ -3,6 +3,7 @@ import { ObservableObject } from '../base/observable-object';
 
 export type HeaderViewEvents = { 'BASKET:OPEN': null };
 
+/** Представление шапки сайта. */
 export class HeaderBrowserView extends ObservableObject<HeaderViewEvents> {
     private _button: HTMLButtonElement;
     private _buttonCounterElement: HTMLElement;

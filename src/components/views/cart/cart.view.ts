@@ -20,6 +20,11 @@ export class CartBrowserView extends ObservableObject<CartViewEvents> implements
         });
     }
 
+    /**
+     * Замечание:"Класс CartBrowserView должен быть в состоянии выводить на экран массив HTML-элементов любой структуры, поэтому он никак не должен зависеть от шаблона карточки с id='card-basket'.
+     * Пояснение: метод render во view занимается отрисовкой данных, в данном случае - отрисовкой списиска товаров, как происходит отрисовка - это детали реализации.
+     *  в данном методе нет ничего, что нарушало бы архитектурные принципы MVP, так как он не содержит никакой логики, а только занимается отрисовкой данных, которые ему передает презентер.
+     */
     render(products: Product[]): void {
         const items: HTMLElement[] = products.map((product, index) => {
             const el = cloneTemplate<HTMLElement>('card-basket');

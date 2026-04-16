@@ -58,6 +58,9 @@ export class EventEmitter<MessageMap extends object> {
         this._handlers = new Map();
         this._allEventsHandler = new Set();
     }
+    /**
+     * Получает обработчики для события
+     */
 
     _getHandlers(eventName: keyof MessageMap): Set<EventHandler<MessageMap>> {
         return this._handlers.get(eventName) ?? new Set();
