@@ -13,6 +13,23 @@ export class CatalogBrowserView extends ObservableObject<CatalogViewEvents> impl
         this._root = ensureElement('.gallery');
     }
 
+    /**
+     * Замечание: Как сказано в комментарии в классе CatalogBrowserView,
+     * его метод render должен быть преобразован: массив HTML-элементов,
+     * который этот метод должен выводить на экран, нужно формировать в обработчике события 'PRODUCTS:LOADED'.
+     *
+     * Комментарий: вынос логики создания items в презентер по шаблону
+     *
+     * events.on('catalog:changed', () => {
+     *      const itemCards = productsModel.getItems().map((item) => {
+     *           const card = new CardCatalog(cloneTemplate(cardCatalogTemplate), {
+     *       });
+     *       this._catalogView.render(itemCards);
+     * });
+     * неприемлем в данной архитектуре, так как создает неприемлемую зависимость презентера от dom элементов (что, в частности, усложняет unit-тестирование логики презентера).
+     * Сейчас презентер является независимым от любых проблемных элементов (dom, api).
+     * Работа с Dom элементами в слое view, в частности создание items не нарушает архитектурных принципов MVP.
+     */
     render(products: Product[]): void {
         const items: HTMLElement[] = products.map(product => {
             const el = cloneTemplate<HTMLElement>('card-catalog');
@@ -31,16 +48,12 @@ export class CatalogBrowserView extends ObservableObject<CatalogViewEvents> impl
             el.dataset.productId = product.id;
 
             el.addEventListener('click', () => {
-                this._handleCardClick(product);
+                this._emit('PRODUCT:SELECTED', { productId: product.id });
             });
 
             return el as HTMLElement;
         });
 
         setChildren(this._root, items);
-    }
-
-    private _handleCardClick(product: Product): void {
-        this._emit('PRODUCT:SELECTED', { product });
     }
 }

@@ -1,30 +1,24 @@
 import type { Product, ProductId } from '../../types';
 import type { ProductApi } from '../../types/api/product.api';
 import type { ProductsModel, ProductsModelEvents } from '../../types/model/model';
-import { isNil } from '../../utils/simple-utils';
-import { ProductNotFoundError } from '../api/errors/product-not-found-error';
 import { ObservableObject } from '../base/observable-object';
 
 export class CatalogModel extends ObservableObject<ProductsModelEvents> implements ProductsModel {
     private _products: Map<ProductId, Product>;
-    private _preview: Product | null = null;
-    api: ProductApi;
+    private _api: ProductApi;
+    private selectedProduct: Product | null = null;
 
     constructor(api: ProductApi) {
         super();
-        this.api = api;
+        this._api = api;
         this._products = new Map();
     }
 
     /**
-     * Возвращает список товаров по переданному массиву идентификаторов.
-     *
-     * @param {ProductId[]} ids - Массив идентификаторов товаров для получения.
-     * @returns {GetProductListResult} Объект с полем `products` при успехе или `error` при ошибке.
-     * @throws {ProductNotFoundError} Выбрасывается если один или несколько товаров не найдены.
+    * Загружает товары из API.
      */
     public async loadProducts(): Promise<void> {
-        const { products, error } = await this.api.getAll();
+        const { products, error } = await this._api.getAll();
 
         if (error === null && products !== null) {
             (products.items || []).forEach(product => this._products.set(product.id, product));
@@ -34,29 +28,36 @@ export class CatalogModel extends ObservableObject<ProductsModelEvents> implemen
             console.error(error);
         }
     }
+
     /**
-     * Возвращает товар по его идентификатору если он есть в каталоге, иначе пробрасывает ошибку.
-     *
-     * @param {ProductId} id - Идентификатор товара для выбора.
-     * @throws {ProductNotFoundError} Выбрасывается если товар с таким id отсутствует.
+     * Возвращает товар по его идентификатору если он есть в каталоге.
      */
+    public getProduct(id: string): Product {
+        const product = this._products.get(id);
 
-    public async loadProductById(id: string): Promise<Product> {
-        const { product, error } = await this.api.getProductById(id);
-
-        if (isNil(product)) {
-            throw new ProductNotFoundError(id);
-        }
-
-        if (error !== null) {
-            console.error(error);
+        if (!product) {
+            throw new Error('Application logic error: trying to get product by id that is not in catalog');
         }
 
         return product;
     }
 
-    public setPreview(preview: Product): void {
-        this._preview = preview;
-        this._emit('PREVIEW:UPDATED', { preview });
+    /**
+     *
+     * @param productId
+     * Устанавливает выбранный товар.
+     */
+    public selectProduct(productId: string): void {
+        const product = this.getProduct(productId);
+        this.selectedProduct = product;
+        this._emit('PRODUCT:SELECTED', { product: this.selectedProduct });
+    }
+
+    /**
+     * Сбрасывает выбранный товар.
+     */
+
+    public resetSelectedProduct(): void {
+        this.selectedProduct = null;
     }
 }

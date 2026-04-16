@@ -1,3 +1,4 @@
+import type { ContactsErrors, OrderDetailsErrors } from '../../types';
 import type { CreateOrderResult, OrderApi } from '../../types/api/order.api';
 import type { CartModel } from '../../types/model/model';
 import type { CartModalView } from '../../types/views/cart.view';
@@ -5,7 +6,7 @@ import type { CatalogView } from '../../types/views/catalog.view';
 import type { ContactsModalView } from '../../types/views/contacts.view';
 import type { OrderCreationResultModalView } from '../../types/views/order-creation-result.view';
 import type { OrderDetailsModalView } from '../../types/views/order-details.view';
-import { type ProductCardView } from '../../types/views/product.view';
+import type { ProductModalView } from '../../types/views/product.view';
 import type { CatalogModel } from '../models/catalog.model';
 import type { CustomerModel } from '../models/customer.model';
 import type { HeaderView } from '../views/header.view';
@@ -26,7 +27,7 @@ export type Deps = {
     /** представление каталога */
     catalogView: CatalogView;
     /** представление модального окна показа товара */
-    productModalView: ProductCardView;
+    productModalView: ProductModalView;
     /** представление модального окна для ввода деталей заказа */
     orderDetailsView: OrderDetailsModalView;
     /** представление модального окна для ввода контактных данных */
@@ -45,7 +46,7 @@ export class CatalogPresenter {
     private _catalogModel: CatalogModel;
     private _customerModel: CustomerModel;
     private _catalogView: CatalogView;
-    private _productView: ProductCardView;
+    private _productView: ProductModalView;
     private _orderDetailsView: OrderDetailsModalView;
     private _contactsView: ContactsModalView;
     private _cartView: CartModalView;
@@ -92,20 +93,21 @@ export class CatalogPresenter {
     init() {
         this._catalogModel.on('PRODUCTS:LOADED', ({ products }) => {
             this._catalogView.render(products);
-        },
-        );
+        });
+
         this._catalogModel.loadProducts();
 
         this._catalogView.on(
             'PRODUCT:SELECTED',
-            ({ product }) => {
-                this._catalogModel.setPreview(product);
-                this._productView.setButtonDisabledState(this._cartModel.has(product.id));
+            ({ productId }) => {
+                const product = this._catalogModel.getProduct(productId);
+                this._catalogModel.selectProduct(productId);
+                this._productView.setAddToCartButtonState(this._cartModel.has(productId) || product.price === null);
             },
         );
 
-        this._catalogModel.on('PREVIEW:UPDATED', ({ preview }) => {
-            this._productView.render(preview);
+        this._catalogModel.on('PRODUCT:SELECTED', ({ product }) => {
+            this._productView.render(product);
         });
 
         this._headerView.on('BASKET:OPEN', () => {
@@ -113,19 +115,31 @@ export class CatalogPresenter {
             this._cartView.show();
         });
 
-        this._productView.on('BUTTON-CLICK:BUY', ({ product }) => {
+        this._productView.on('BUTTON-CLICK:BUY', ({ productId }) => {
+            const product = this._catalogModel.getProduct(productId);
             this._cartModel.addProduct(product);
-            this._productView.setButtonDisabledState(true);
+            this._productView.setAddToCartButtonState(true);
+        });
+
+        this._productView.on('BUTTON-CLICK:BUY', ({ productId }) => {
+            const product = this._catalogModel.getProduct(productId);
+            this._cartModel.addProduct(product);
+            this._productView.setAddToCartButtonState(true);
+        });
+
+        this._productView.on('MODAL:CLOSED', () => {
+            this._catalogModel.resetSelectedProduct();
+            this._productView.setAddToCartButtonState(true);
         });
 
         this._cartView.on('BUTTON-CLICK:REMOVE-PRODUCT', ({ productId }) => {
             this._cartModel.removeProduct(productId);
-            this._productView.setButtonDisabledState(false);
+            this._productView.setAddToCartButtonState(false);
         });
 
         this._cartView.on('BUTTON-CLICK:ORDER-CREATE', () => {
             this._cartView.hide();
-            this._orderDetailsView.show();
+            this._orderDetailsView.render(this._customerModel.getCustomerInfo());
         });
 
         this._cartModel.on('CART:UPDATED', ({ products }) => {
@@ -133,19 +147,22 @@ export class CatalogPresenter {
             this._cartView.render(products || []);
         });
 
-        this._orderDetailsView.on('FORM-CHANGED', ({ data, isValid }) => {
-            if (isValid) {
-                this._customerModel.setOrderDetails(data);
-                this._orderDetailsView.setOrderButtonDisabledState(!isValid);
-            }
+        this._orderDetailsView.on('FORM-CHANGED', ({ data }) => {
+            this._customerModel.setData(data);
+        });
+
+        this._customerModel.on('CUSTOMER:CHANGED', () => {
+            const errors = this._customerModel.validate();
+            this.handleContactsErrors(errors);
+            this.handleOrderDetailsErrors(errors);
         });
 
         this._orderDetailsView.on('FORM-SUBMIT', () => {
-            this._contactsView.show();
+            this._contactsView.render(this._customerModel.getCustomerInfo());
         });
 
-        this._contactsView.on('FORM-CHANGED', ({ data, isValid }) => {
-            if (isValid) this._customerModel.setContacts(data);
+        this._contactsView.on('FORM-CHANGED', ({ data }) => {
+            this._customerModel.setData(data);
         });
 
         this._contactsView.on('FORM-SUBMIT', async () => {
@@ -161,10 +178,40 @@ export class CatalogPresenter {
         });
     }
 
+    private handleContactsErrors({ email, phone }: ContactsErrors) {
+        const errors = [
+            ...(email ? [email] : []),
+            ...(phone ? [phone] : []),
+        ];
+
+        if (errors.length > 0) {
+            this._contactsView.renderErrors(errors);
+            this._contactsView.disableSubmitButton();
+        }
+        else {
+            this._contactsView.resetErrors();
+            this._contactsView.enableSubmitButton();
+        }
+    }
+
+    private handleOrderDetailsErrors({ address, payment }: OrderDetailsErrors) {
+        const errors = [
+            ...(address ? [address] : []),
+            ...(payment ? [payment] : []),
+        ];
+
+        if (errors.length > 0) {
+            this._orderDetailsView.disableSubmitButton();
+        }
+        else {
+            this._orderDetailsView.enableSubmitButton();
+        }
+    }
+
     private _createOrder(): Promise<CreateOrderResult> {
         return this._orderApi.create({
             ...this._cartModel.getValidItems(),
-            ...this._customerModel.getValidCustomerInfo(),
+            ...this._customerModel.getCustomerInfo(),
         });
     }
 }
